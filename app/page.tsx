@@ -81,7 +81,17 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-8 px-6">
         <div className="max-w-6xl mx-auto text-center text-sm text-slate-600 dark:text-slate-400">
-          <p>Built with Next.js, React, and Prisma</p>
+          <p>
+            Built with ❤️ by{" "}
+            <a
+              href="https://github.com/dboatengg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-600 dark:text-primary-400 hover:underline"
+            >
+              Dickson
+            </a>
+          </p>
         </div>
       </footer>
     </div>
