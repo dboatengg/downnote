@@ -388,13 +388,25 @@
 /* Callout/Admonition Blocks */
 /* Use blockquote with special first line patterns for different callout types */
 
-/* Note callout (blue) - Use: > **NOTE** */
+/* Note/Info callout (blue) - Use: > **NOTE** */
 .prose blockquote:has(p:first-child:has(strong:first-child:only-child)) {
-  @apply not-italic bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/40 dark:to-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 p-5 rounded-r-xl my-6 shadow-sm;
+  @apply not-italic p-5 rounded-r-xl my-6 shadow-sm border-l-4;
+  background: linear-gradient(to right, rgb(219 234 254), rgb(191 219 254 / 0.5));
+  border-color: rgb(59 130 246);
+}
+
+.dark .prose blockquote:has(p:first-child:has(strong:first-child:only-child)) {
+  background: linear-gradient(to right, rgb(30 58 138 / 0.4), rgb(30 64 175 / 0.2));
+  border-color: rgb(96 165 250);
 }
 
 .prose blockquote p:has(strong:first-child:only-child) strong {
-  @apply text-blue-800 dark:text-blue-200 block mb-3 text-sm font-bold uppercase tracking-wide;
+  @apply block mb-3 text-sm font-bold uppercase tracking-wide;
+  color: rgb(30 64 175);
+}
+
+.dark .prose blockquote p:has(strong:first-child:only-child) strong {
+  color: rgb(147 197 253);
 }
 
 .prose blockquote p:has(strong:first-child:only-child) strong::before {
@@ -402,13 +414,25 @@
   margin-right: 0.5rem;
 }
 
-/* Warning callout (yellow) - Use: > ***WARNING*** */
+/* Warning callout (orange/yellow) - Use: > ***WARNING*** */
 .prose blockquote:has(p:first-child:has(em:only-child:has(strong:only-child))) {
-  @apply not-italic bg-gradient-to-r from-yellow-50 to-amber-100/50 dark:from-yellow-950/40 dark:to-yellow-900/20 border-l-4 border-yellow-500 dark:border-yellow-400 p-5 rounded-r-xl my-6 shadow-sm;
+  @apply not-italic p-5 rounded-r-xl my-6 shadow-sm border-l-4;
+  background: linear-gradient(to right, rgb(254 243 199), rgb(253 224 71 / 0.4));
+  border-color: rgb(245 158 11);
+}
+
+.dark .prose blockquote:has(p:first-child:has(em:only-child:has(strong:only-child))) {
+  background: linear-gradient(to right, rgb(120 53 15 / 0.4), rgb(146 64 14 / 0.2));
+  border-color: rgb(251 191 36);
 }
 
 .prose blockquote p:has(em:only-child:has(strong:only-child)) em strong {
-  @apply text-yellow-900 dark:text-yellow-200 block mb-3 text-sm font-bold uppercase tracking-wide not-italic;
+  @apply block mb-3 text-sm font-bold uppercase tracking-wide not-italic;
+  color: rgb(146 64 14);
+}
+
+.dark .prose blockquote p:has(em:only-child:has(strong:only-child)) em strong {
+  color: rgb(253 224 71);
 }
 
 .prose blockquote p:has(em:only-child:has(strong:only-child)) em strong::before {
@@ -416,13 +440,25 @@
   margin-right: 0.5rem;
 }
 
-/* Tip callout (green) - Use: > `TIP` */
+/* Tip/Success callout (green) - Use: > `TIP` */
 .prose blockquote:has(p:first-child:has(code:first-child:only-child)) {
-  @apply not-italic bg-gradient-to-r from-green-50 to-emerald-100/50 dark:from-green-950/40 dark:to-green-900/20 border-l-4 border-green-500 dark:border-green-400 p-5 rounded-r-xl my-6 shadow-sm;
+  @apply not-italic p-5 rounded-r-xl my-6 shadow-sm border-l-4;
+  background: linear-gradient(to right, rgb(220 252 231), rgb(187 247 208 / 0.5));
+  border-color: rgb(34 197 94);
+}
+
+.dark .prose blockquote:has(p:first-child:has(code:first-child:only-child)) {
+  background: linear-gradient(to right, rgb(20 83 45 / 0.4), rgb(21 128 61 / 0.2));
+  border-color: rgb(74 222 128);
 }
 
 .prose blockquote p:has(code:first-child:only-child) code {
-  @apply bg-transparent text-green-800 dark:text-green-200 font-bold text-sm uppercase tracking-wide;
+  @apply bg-transparent font-bold text-sm uppercase tracking-wide;
+  color: rgb(21 128 61);
+}
+
+.dark .prose blockquote p:has(code:first-child:only-child) code {
+  color: rgb(134 239 172);
 }
 
 .prose blockquote p:has(code:first-child:only-child) code::before {
@@ -430,14 +466,27 @@
   margin-right: 0.5rem;
 }
 
-/* Danger/Important callout (red) - Use: > ~~DANGER~~ */
+/* Danger/Error callout (red) - Use: > ~~DANGER~~ */
 .prose
   blockquote:has(p:first-child:has(del:only-child:has(strong:only-child))) {
-  @apply not-italic bg-gradient-to-r from-red-50 to-rose-100/50 dark:from-red-950/40 dark:to-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-5 rounded-r-xl my-6 shadow-sm;
+  @apply not-italic p-5 rounded-r-xl my-6 shadow-sm border-l-4;
+  background: linear-gradient(to right, rgb(254 226 226), rgb(252 165 165 / 0.5));
+  border-color: rgb(239 68 68);
+}
+
+.dark .prose
+  blockquote:has(p:first-child:has(del:only-child:has(strong:only-child))) {
+  background: linear-gradient(to right, rgb(127 29 29 / 0.4), rgb(153 27 27 / 0.2));
+  border-color: rgb(248 113 113);
 }
 
 .prose blockquote p:has(del:only-child:has(strong:only-child)) del strong {
-  @apply text-red-900 dark:text-red-200 block mb-3 text-sm font-bold uppercase tracking-wide no-underline;
+  @apply block mb-3 text-sm font-bold uppercase tracking-wide no-underline;
+  color: rgb(153 27 27);
+}
+
+.dark .prose blockquote p:has(del:only-child:has(strong:only-child)) del strong {
+  color: rgb(252 165 165);
 }
 
 .prose blockquote p:has(del:only-child:has(strong:only-child)) del strong::before {
