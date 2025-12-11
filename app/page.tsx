@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { Header } from "@/components/ui/header";
-import { FileText, Zap, Lock, Cloud, Sparkles, ArrowRight, Github, Star, GitFork, Heart } from "lucide-react";
+import {
+  FileText,
+  Zap,
+  Lock,
+  Cloud,
+  Sparkles,
+  ArrowRight,
+  Github,
+  Star,
+  GitFork,
+  Heart,
+} from "lucide-react";
 
 export default function Home() {
   return (
@@ -78,14 +89,18 @@ export default function Home() {
         </div>
 
         {/* CTA Section - Contribute */}
-        <div className="max-w-4xl mx-auto mt-32 mb-20">
+        <div className="max-w-4xl mx-auto mt-32 mb-10">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 dark:from-primary-500 dark:via-primary-600 dark:to-primary-700 p-12 shadow-2xl">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-                backgroundSize: '32px 32px'
-              }}></div>
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+                  backgroundSize: "32px 32px",
+                }}
+              ></div>
             </div>
 
             <div className="relative z-10 text-center space-y-6">
@@ -99,8 +114,9 @@ export default function Home() {
               </h2>
 
               <p className="text-lg text-primary-100 max-w-2xl mx-auto leading-relaxed">
-                DownNote is open source and I'd love your help! Star the project,
-                contribute code, report bugs, or suggest features. Every contribution makes a difference!
+                DownNote is open source and I&apos;d love your help! Star the
+                project, contribute code, report bugs, or suggest features.
+                Every contribution makes a difference!
               </p>
 
               {/* CTA Buttons */}
@@ -148,7 +164,9 @@ export default function Home() {
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold">❤️</div>
-                  <div className="text-sm text-primary-100">Contributors Welcome</div>
+                  <div className="text-sm text-primary-100">
+                    Contributors Welcome
+                  </div>
                 </div>
               </div>
             </div>
