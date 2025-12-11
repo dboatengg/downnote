@@ -13,7 +13,8 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import Split from "react-split";
 import { useTheme } from "@/components/ui/theme-provider";
-import { Eye, Edit, Columns, Download, Save, PanelLeftClose, PanelLeft, Maximize2, Minimize2 } from "lucide-react";
+import { Eye, Edit, Columns, Download, Save, PanelLeftClose, PanelLeft, Maximize2, Minimize2, FileText, ChevronUp, ChevronDown } from "lucide-react";
+import { calculateTextStats, formatReadingTime } from "@/lib/word-count";
 import "highlight.js/styles/github-dark.css";
 
 type ViewMode = "split" | "edit" | "preview";
@@ -41,9 +42,25 @@ export function MarkdownEditor({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [showStats, setShowStats] = useState(() => {
+    // Load preference from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('downnote-show-stats');
+      return saved ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
   const editorRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const isScrollingSyncRef = useRef(false);
+
+  // Calculate text statistics
+  const stats = calculateTextStats(content);
+
+  // Save stats preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('downnote-show-stats', JSON.stringify(showStats));
+  }, [showStats]);
 
   // Set default view mode based on screen size
   useEffect(() => {
@@ -453,6 +470,73 @@ export function MarkdownEditor({
           </div>
         )}
       </div>
+
+      {/* Status Bar */}
+      {!isFocusMode && (
+        <div className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="flex items-center justify-between px-3 sm:px-6 py-2">
+            {/* Left: Stats */}
+            <div className="flex items-center gap-4">
+              {showStats ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <FileText className="w-3.5 h-3.5" />
+                    <span className="font-medium">{stats.words.toLocaleString()}</span>
+                    <span className="hidden sm:inline">words</span>
+                  </div>
+                  <div className="text-xs text-slate-400 dark:text-slate-600">•</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    <span className="font-medium">{stats.characters.toLocaleString()}</span>
+                    <span className="hidden sm:inline"> characters</span>
+                    <span className="sm:hidden">ch</span>
+                  </div>
+                  <div className="text-xs text-slate-400 dark:text-slate-600 hidden sm:block">•</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 hidden sm:block">
+                    {formatReadingTime(stats.readingTime)}
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs text-slate-500 dark:text-slate-500 italic">
+                  Stats hidden
+                </div>
+              )}
+            </div>
+
+            {/* Right: Toggle & Save Status */}
+            <div className="flex items-center gap-3">
+              {/* Save Status */}
+              {lastSaved && (
+                <div className="text-xs text-slate-500 dark:text-slate-500 hidden sm:block">
+                  {isSaving ? (
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
+                      Saving...
+                    </span>
+                  ) : (
+                    <span>Saved {formatTime(lastSaved)}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Stats Toggle Button */}
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="flex items-center gap-1 px-2 py-1 rounded text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title={showStats ? "Hide stats" : "Show stats"}
+              >
+                {showStats ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden sm:inline">
+                  {showStats ? "Hide" : "Show"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
