@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
-import { FileText, Plus, Trash2, Clock } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, PanelLeftClose, PanelLeft } from "lucide-react";
 
 interface Document {
   id: string;
@@ -19,8 +19,141 @@ export default function EditorPage() {
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Show sidebar by default on desktop
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (window.innerWidth >= 1024) {
+        setShowSidebar(true);
+      }
+    };
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // Create welcome document with markdown guide
+  const createWelcomeDocument = useCallback(async () => {
+    const welcomeContent = `# Welcome to DownNote! 📝
+
+A beautiful markdown editor with real-time preview.
+
+## Basic Formatting
+
+You can make text **bold**, *italic*, or ***both***.
+You can also use ~~strikethrough~~ text.
+
+## Headings
+
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+
+## Lists
+
+### Unordered Lists
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Third item
+
+### Ordered Lists
+1. First step
+2. Second step
+3. Third step
+
+## Links and Images
+
+[Visit DownNote](https://downnote.app)
+
+![Alt text](https://via.placeholder.com/400x200?text=Sample+Image)
+
+## Code
+
+Inline code: \`const greeting = "Hello World";\`
+
+\`\`\`javascript
+// Code block with syntax highlighting
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(10));
+\`\`\`
+
+## Tables
+
+| Feature | Status | Priority |
+|---------|--------|----------|
+| Markdown | ✅ | High |
+| Dark Mode | ✅ | High |
+| Auto-save | ✅ | Medium |
+
+## Blockquotes
+
+> "The best way to predict the future is to invent it."
+>
+> — Alan Kay
+
+## Task Lists
+
+- [x] Create account
+- [x] Write first document
+- [ ] Explore all features
+- [ ] Share with friends
+
+## Horizontal Rule
+
+---
+
+## Getting Started
+
+1. **Edit Mode** - Write your markdown
+2. **Preview Mode** - See the rendered output
+3. **Split Mode** - See both side by side (desktop)
+
+Start editing to see your changes in real-time! 🚀`;
+
+    const welcomeDoc: Document = {
+      id: `doc-${Date.now()}`,
+      title: "Welcome to DownNote",
+      content: welcomeContent,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (session?.user) {
+      // Save to API
+      try {
+        const response = await fetch("/api/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: welcomeDoc.title,
+            content: welcomeDoc.content,
+          }),
+        });
+
+        if (response.ok) {
+          const savedDoc = await response.json();
+          setDocuments([savedDoc]);
+          setCurrentDoc(savedDoc);
+        }
+      } catch (error) {
+        console.error("Failed to create welcome document:", error);
+      }
+    } else {
+      // Save to localStorage
+      const docs = [welcomeDoc];
+      setDocuments(docs);
+      setCurrentDoc(welcomeDoc);
+      localStorage.setItem("downnote-documents", JSON.stringify(docs));
+    }
+  }, [session, setDocuments, setCurrentDoc]);
 
   // Load documents (from localStorage for guests, API for authenticated users)
   useEffect(() => {
@@ -36,6 +169,9 @@ export default function EditorPage() {
             setDocuments(docs);
             if (docs.length > 0) {
               setCurrentDoc(docs[0]);
+            } else {
+              // Create welcome document for new authenticated users
+              createWelcomeDocument();
             }
           }
         } catch (error) {
@@ -49,14 +185,20 @@ export default function EditorPage() {
           setDocuments(docs);
           if (docs.length > 0) {
             setCurrentDoc(docs[0]);
+          } else {
+            // Create welcome document for new guests
+            createWelcomeDocument();
           }
+        } else {
+          // First time guest - create welcome document
+          createWelcomeDocument();
         }
       }
       setLoading(false);
     };
 
     loadDocuments();
-  }, [session, status]);
+  }, [session, status, createWelcomeDocument]);
 
   // Create new document
   const createNewDocument = async () => {
@@ -184,7 +326,19 @@ export default function EditorPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         {showSidebar && (
-          <div className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col">
+          <div className="fixed lg:relative inset-y-0 left-0 z-40 w-64 lg:w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shadow-lg lg:shadow-none">
+            {/* Sidebar Header with Toggle */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900 dark:text-slate-50">Documents</h2>
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="hidden lg:block p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                title="Hide sidebar"
+              >
+                <PanelLeftClose className="w-5 h-5" />
+              </button>
+            </div>
+
             {/* New Document Button */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800">
               <button
@@ -256,6 +410,14 @@ export default function EditorPage() {
           </div>
         )}
 
+        {/* Overlay for mobile when sidebar is open */}
+        {showSidebar && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
+
         {/* Editor Area */}
         <div className="flex-1 flex flex-col">
           {currentDoc ? (
@@ -264,6 +426,8 @@ export default function EditorPage() {
               initialContent={currentDoc.content}
               onSave={saveDocument}
               autoSave={true}
+              onToggleSidebar={() => setShowSidebar(!showSidebar)}
+              showSidebar={showSidebar}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-center p-8">
