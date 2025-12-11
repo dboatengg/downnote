@@ -265,7 +265,7 @@ export function MarkdownEditor({
           {onToggleSidebar && showSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors lg:hidden"
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Hide sidebar"
             >
               <PanelLeftClose className="w-5 h-5" />
@@ -400,7 +400,7 @@ export function MarkdownEditor({
 
             {/* Preview Pane */}
             <div ref={previewRef} className="h-full overflow-auto bg-white dark:bg-slate-900">
-              <div className="prose prose-slate dark:prose-invert max-w-none p-8 mx-auto" style={{ maxWidth: '65ch' }}>
+              <div className="prose prose-slate dark:prose-invert max-w-none p-8">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   rehypePlugins={[rehypeHighlight, rehypeRaw]}

@@ -51,6 +51,11 @@ export function DocumentSidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   // Filter documents based on search
   const filteredDocuments = documents.filter(
@@ -77,9 +82,18 @@ export function DocumentSidebar({
   };
 
   const handleDelete = (id: string, title: string) => {
-    if (confirm(`Are you sure you want to delete "${title}"?`)) {
-      onDocumentDelete(id);
+    setDeleteConfirm({ id, title });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm) {
+      onDocumentDelete(deleteConfirm.id);
+      setDeleteConfirm(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   return (
@@ -160,12 +174,14 @@ export function DocumentSidebar({
           filteredDocuments.map((doc) => (
             <div
               key={doc.id}
-              className={`group p-3 rounded-lg cursor-pointer transition-all ${
+              className={`p-3 rounded-lg cursor-pointer transition-all ${
                 currentDocId === doc.id
                   ? "bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500 shadow-sm"
                   : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-2 border-transparent"
               }`}
               onClick={() => onDocumentSelect(doc)}
+              onMouseEnter={() => setHoveredDocId(doc.id)}
+              onMouseLeave={() => setHoveredDocId(null)}
             >
               {editingId === doc.id ? (
                 // Edit mode
@@ -208,14 +224,14 @@ export function DocumentSidebar({
                       {formatDate(doc.updatedAt)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={`flex items-center gap-1 transition-opacity flex-shrink-0 ${hoveredDocId === doc.id ? 'opacity-100' : 'opacity-0'}`}>
                     {onDocumentUpdate && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleStartEdit(doc);
                         }}
-                        className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                        className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600 dark:text-primary-400 transition-colors"
                         title="Rename"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -226,7 +242,7 @@ export function DocumentSidebar({
                         e.stopPropagation();
                         handleDelete(doc.id, doc.title);
                       }}
-                      className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+                      className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -285,6 +301,51 @@ export function DocumentSidebar({
           >
             Sign in to sync across devices
           </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-2">
+                  Delete Document?
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  Are you sure you want to delete{" "}
+                  <span className="font-medium text-slate-900 dark:text-slate-50">
+                    &ldquo;{deleteConfirm.title}&rdquo;
+                  </span>
+                  ?
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-500">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 px-4 py-2.5 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium shadow-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
