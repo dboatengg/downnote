@@ -279,6 +279,46 @@
   @apply rounded-lg shadow-lg my-4;
 }
 
+/* Callout/Admonition Blocks */
+/* Use blockquote with special first line patterns for different callout types */
+
+/* Note callout (blue) - Use: > **NOTE** */
+.prose blockquote:has(p:first-child:has(strong:first-child:only-child)) {
+  @apply not-italic bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-600 p-4 rounded-r-lg my-6;
+}
+
+.prose blockquote p:has(strong:first-child:only-child) strong {
+  @apply text-blue-700 dark:text-blue-300 block mb-2 text-sm font-bold uppercase tracking-wide;
+}
+
+/* Warning callout (yellow) - Use: > ***WARNING*** */
+.prose blockquote:has(p:first-child:has(em:only-child:has(strong:only-child))) {
+  @apply not-italic bg-yellow-50 dark:bg-yellow-950/30 border-yellow-500 dark:border-yellow-600 p-4 rounded-r-lg my-6;
+}
+
+.prose blockquote p:has(em:only-child:has(strong:only-child)) em strong {
+  @apply text-yellow-700 dark:text-yellow-300 block mb-2 text-sm font-bold uppercase tracking-wide not-italic;
+}
+
+/* Tip callout (green) - Use: > `TIP` */
+.prose blockquote:has(p:first-child:has(code:first-child:only-child)) {
+  @apply not-italic bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-600 p-4 rounded-r-lg my-6;
+}
+
+.prose blockquote p:has(code:first-child:only-child) code {
+  @apply bg-transparent text-green-700 dark:text-green-300 font-bold text-sm uppercase tracking-wide;
+}
+
+/* Danger/Important callout (red) - Use: > ~~DANGER~~ */
+.prose
+  blockquote:has(p:first-child:has(del:only-child:has(strong:only-child))) {
+  @apply not-italic bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-600 p-4 rounded-r-lg my-6;
+}
+
+.prose blockquote p:has(del:only-child:has(strong:only-child)) del strong {
+  @apply text-red-700 dark:text-red-300 block mb-2 text-sm font-bold uppercase tracking-wide no-underline;
+}
+
 /* Task Lists */
 .prose input[type="checkbox"] {
   @apply mr-2;

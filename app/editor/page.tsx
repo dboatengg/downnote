@@ -102,6 +102,20 @@ console.log(fibonacci(10));
 >
 > — Alan Kay
 
+## Callouts / Admonitions
+
+> **NOTE**
+> This is a note callout. Use it for important information that users should be aware of.
+
+> \`TIP\`
+> This is a tip callout. Use it to share helpful advice or best practices.
+
+> ***WARNING***
+> This is a warning callout. Use it to alert users about potential issues or important considerations.
+
+> ~~**DANGER**~~
+> This is a danger callout. Use it for critical warnings that require immediate attention.
+
 ## Task Lists
 
 - [x] Create account
