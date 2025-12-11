@@ -299,11 +299,15 @@ export function MarkdownEditor({
             className="flex h-full"
             sizes={[50, 50]}
             minSize={300}
-            gutterSize={8}
-            gutterStyle={() => ({
+            gutterSize={10}
+            direction="horizontal"
+            cursor="col-resize"
+            gutterStyle={(_dimension, gutterSize) => ({
               backgroundColor: theme === "dark" ? "#1e293b" : "#e2e8f0",
               cursor: "col-resize",
+              width: `${gutterSize}px`,
             })}
+            gutterAlign="center"
           >
             {/* Editor Pane */}
             <div className="h-full overflow-auto">
