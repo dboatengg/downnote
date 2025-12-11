@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -41,6 +41,9 @@ export function MarkdownEditor({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const isScrollingSyncRef = useRef(false);
 
   // Set default view mode based on screen size
   useEffect(() => {
@@ -69,6 +72,61 @@ export function MarkdownEditor({
 
     return () => clearTimeout(timer);
   }, [content, autoSave, onSave, initialContent]);
+
+  // Synchronized scrolling between editor and preview
+  useEffect(() => {
+    if (viewMode !== "split") return;
+
+    const editorEl = editorRef.current;
+    const previewEl = previewRef.current;
+
+    if (!editorEl || !previewEl) return;
+
+    // CodeMirror creates a .cm-scroller element that handles scrolling
+    const editorScroller = editorEl.querySelector('.cm-scroller') as HTMLElement;
+
+    if (!editorScroller) return;
+
+    const handleEditorScroll = () => {
+      if (isScrollingSyncRef.current) return;
+      isScrollingSyncRef.current = true;
+
+      const scrollPercentage = editorScroller.scrollTop / (editorScroller.scrollHeight - editorScroller.clientHeight);
+      const targetScroll = scrollPercentage * (previewEl.scrollHeight - previewEl.clientHeight);
+
+      if (isFinite(targetScroll)) {
+        previewEl.scrollTop = targetScroll;
+      }
+
+      setTimeout(() => {
+        isScrollingSyncRef.current = false;
+      }, 50);
+    };
+
+    const handlePreviewScroll = () => {
+      if (isScrollingSyncRef.current) return;
+      isScrollingSyncRef.current = true;
+
+      const scrollPercentage = previewEl.scrollTop / (previewEl.scrollHeight - previewEl.clientHeight);
+      const targetScroll = scrollPercentage * (editorScroller.scrollHeight - editorScroller.clientHeight);
+
+      if (isFinite(targetScroll)) {
+        editorScroller.scrollTop = targetScroll;
+      }
+
+      setTimeout(() => {
+        isScrollingSyncRef.current = false;
+      }, 50);
+    };
+
+    editorScroller.addEventListener("scroll", handleEditorScroll);
+    previewEl.addEventListener("scroll", handlePreviewScroll);
+
+    return () => {
+      editorScroller.removeEventListener("scroll", handleEditorScroll);
+      previewEl.removeEventListener("scroll", handlePreviewScroll);
+    };
+  }, [viewMode, content]);
 
   const handleChange = useCallback((value: string) => {
     setContent(value);
@@ -310,7 +368,7 @@ export function MarkdownEditor({
             gutterAlign="center"
           >
             {/* Editor Pane */}
-            <div className="h-full overflow-auto">
+            <div ref={editorRef} className="h-full overflow-auto">
               <CodeMirror
                 value={content}
                 height="100%"
@@ -341,7 +399,7 @@ export function MarkdownEditor({
             </div>
 
             {/* Preview Pane */}
-            <div className="h-full overflow-auto bg-white dark:bg-slate-900">
+            <div ref={previewRef} className="h-full overflow-auto bg-white dark:bg-slate-900">
               <div className="prose prose-slate dark:prose-invert max-w-none p-8 mx-auto" style={{ maxWidth: '65ch' }}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}

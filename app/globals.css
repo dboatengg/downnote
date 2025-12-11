@@ -197,11 +197,31 @@
 }
 
 .prose h1 {
-  @apply text-4xl font-serif font-bold text-slate-900 dark:text-slate-50 mb-4 pb-3 mt-8 border-b-2 border-slate-200 dark:border-slate-700;
+  @apply text-4xl font-serif font-bold text-slate-900 dark:text-slate-50 mb-4 pb-3 mt-8 border-b-2;
+  border-image: linear-gradient(to right, rgb(14 165 233), rgb(125 211 252)) 1;
+}
+
+.dark .prose h1 {
+  border-image: linear-gradient(to right, rgb(56 189 248), rgb(14 165 233)) 1;
 }
 
 .prose h2 {
-  @apply text-3xl font-serif font-bold text-slate-900 dark:text-slate-50 mb-3 mt-6;
+  @apply text-3xl font-serif font-bold text-slate-900 dark:text-slate-50 mb-3 mt-6 relative pl-4;
+}
+
+.prose h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  width: 4px;
+  height: 1.2em;
+  background: linear-gradient(to bottom, rgb(14 165 233), rgb(125 211 252));
+  border-radius: 2px;
+}
+
+.dark .prose h2::before {
+  background: linear-gradient(to bottom, rgb(56 189 248), rgb(14 165 233));
 }
 
 .prose h3 {
@@ -217,11 +237,31 @@
 }
 
 .prose a {
-  @apply text-primary-600 dark:text-primary-400 hover:underline font-medium;
+  @apply text-primary-600 dark:text-primary-400 font-medium no-underline;
+  background-image: linear-gradient(to right, rgb(14 165 233), rgb(14 165 233));
+  background-position: 0% 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+  transition: background-size 0.3s ease;
+}
+
+.prose a:hover {
+  background-size: 100% 2px;
+}
+
+.dark .prose a {
+  background-image: linear-gradient(to right, rgb(56 189 248), rgb(56 189 248));
 }
 
 .prose strong {
   @apply text-slate-900 dark:text-slate-50 font-semibold;
+  background: linear-gradient(to right, rgb(241 245 249), rgb(226 232 240));
+  padding: 0 0.2em;
+  border-radius: 2px;
+}
+
+.dark .prose strong {
+  background: linear-gradient(to right, rgb(30 41 59), rgb(51 65 85));
 }
 
 .prose em {
@@ -229,55 +269,116 @@
 }
 
 .prose code {
-  @apply bg-slate-100 dark:bg-slate-800 text-primary-600 dark:text-primary-400 px-1.5 py-0.5 rounded text-sm font-mono;
+  @apply bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 text-primary-700 dark:text-primary-300 px-2 py-1 rounded font-mono border border-slate-200 dark:border-slate-700;
+  font-size: 0.9em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .prose pre {
-  @apply bg-slate-900 dark:bg-slate-950 rounded-lg p-4 overflow-x-auto mb-4;
+  @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 rounded-xl p-5 overflow-x-auto mb-4 border border-slate-700 dark:border-slate-800;
   white-space: pre-wrap;
   word-wrap: break-word;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .prose pre code {
-  @apply bg-transparent text-slate-50 p-0;
+  @apply bg-transparent text-slate-50 p-0 border-0;
   white-space: pre-wrap;
   word-wrap: break-word;
+  font-size: 0.95em;
+  box-shadow: none;
 }
 
 .prose blockquote {
-  @apply border-l-4 border-primary-500 pl-4 italic text-slate-600 dark:text-slate-400 my-4;
+  @apply border-l-4 border-primary-500 dark:border-primary-400 pl-5 pr-4 py-3 italic text-slate-600 dark:text-slate-400 my-4 bg-slate-50 dark:bg-slate-800/30 rounded-r-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .prose ul {
-  @apply list-disc list-inside mb-4 text-slate-700 dark:text-slate-300;
+  @apply mb-4 text-slate-700 dark:text-slate-300;
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose ul li {
+  @apply mb-3 pl-7 relative;
+}
+
+.prose ul li::before {
+  content: "▸";
+  position: absolute;
+  left: 0.75rem;
+  color: rgb(14 165 233);
+  font-weight: bold;
+}
+
+.dark .prose ul li::before {
+  color: rgb(56 189 248);
 }
 
 .prose ol {
-  @apply list-decimal list-inside mb-4 text-slate-700 dark:text-slate-300;
+  @apply mb-4 text-slate-700 dark:text-slate-300;
+  list-style: none;
+  counter-reset: item;
+  padding-left: 0;
+}
+
+.prose ol li {
+  @apply mb-3 pl-8 relative;
+  counter-increment: item;
+}
+
+.prose ol li::before {
+  content: counter(item) ".";
+  position: absolute;
+  left: 0.5rem;
+  color: rgb(14 165 233);
+  font-weight: bold;
+  font-size: 0.95em;
+}
+
+.dark .prose ol li::before {
+  color: rgb(56 189 248);
 }
 
 .prose li {
-  @apply mb-2;
+  @apply leading-relaxed;
 }
 
 .prose table {
-  @apply w-full border-collapse mb-4;
+  @apply w-full border-collapse mb-6 rounded-lg overflow-hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .prose thead {
-  @apply bg-slate-100 dark:bg-slate-800;
+  @apply bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700;
 }
 
 .prose th {
-  @apply border border-slate-300 dark:border-slate-600 px-4 py-2 text-left font-semibold text-slate-900 dark:text-slate-50;
+  @apply border border-slate-200 dark:border-slate-600 px-4 py-3 text-left font-semibold text-slate-900 dark:text-slate-50;
 }
 
 .prose td {
-  @apply border border-slate-300 dark:border-slate-600 px-4 py-2 text-slate-700 dark:text-slate-300;
+  @apply border border-slate-200 dark:border-slate-700 px-4 py-3 text-slate-700 dark:text-slate-300;
+  background: white;
+}
+
+.dark .prose td {
+  background: rgb(15 23 42 / 0.5);
+}
+
+.prose tbody tr:hover td {
+  @apply bg-slate-50 dark:bg-slate-800/50;
 }
 
 .prose hr {
-  @apply border-slate-300 dark:border-slate-700 my-8;
+  @apply border-0 my-8;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgb(203 213 225), transparent);
+}
+
+.dark .prose hr {
+  background: linear-gradient(to right, transparent, rgb(51 65 85), transparent);
 }
 
 .prose img {
@@ -289,39 +390,59 @@
 
 /* Note callout (blue) - Use: > **NOTE** */
 .prose blockquote:has(p:first-child:has(strong:first-child:only-child)) {
-  @apply not-italic bg-blue-50 dark:bg-blue-950/30 border-blue-500 dark:border-blue-600 p-4 rounded-r-lg my-6;
+  @apply not-italic bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/40 dark:to-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 p-5 rounded-r-xl my-6 shadow-sm;
 }
 
 .prose blockquote p:has(strong:first-child:only-child) strong {
-  @apply text-blue-700 dark:text-blue-300 block mb-2 text-sm font-bold uppercase tracking-wide;
+  @apply text-blue-800 dark:text-blue-200 block mb-3 text-sm font-bold uppercase tracking-wide;
+}
+
+.prose blockquote p:has(strong:first-child:only-child) strong::before {
+  content: "ℹ️ ";
+  margin-right: 0.5rem;
 }
 
 /* Warning callout (yellow) - Use: > ***WARNING*** */
 .prose blockquote:has(p:first-child:has(em:only-child:has(strong:only-child))) {
-  @apply not-italic bg-yellow-50 dark:bg-yellow-950/30 border-yellow-500 dark:border-yellow-600 p-4 rounded-r-lg my-6;
+  @apply not-italic bg-gradient-to-r from-yellow-50 to-amber-100/50 dark:from-yellow-950/40 dark:to-yellow-900/20 border-l-4 border-yellow-500 dark:border-yellow-400 p-5 rounded-r-xl my-6 shadow-sm;
 }
 
 .prose blockquote p:has(em:only-child:has(strong:only-child)) em strong {
-  @apply text-yellow-700 dark:text-yellow-300 block mb-2 text-sm font-bold uppercase tracking-wide not-italic;
+  @apply text-yellow-900 dark:text-yellow-200 block mb-3 text-sm font-bold uppercase tracking-wide not-italic;
+}
+
+.prose blockquote p:has(em:only-child:has(strong:only-child)) em strong::before {
+  content: "⚠️ ";
+  margin-right: 0.5rem;
 }
 
 /* Tip callout (green) - Use: > `TIP` */
 .prose blockquote:has(p:first-child:has(code:first-child:only-child)) {
-  @apply not-italic bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-600 p-4 rounded-r-lg my-6;
+  @apply not-italic bg-gradient-to-r from-green-50 to-emerald-100/50 dark:from-green-950/40 dark:to-green-900/20 border-l-4 border-green-500 dark:border-green-400 p-5 rounded-r-xl my-6 shadow-sm;
 }
 
 .prose blockquote p:has(code:first-child:only-child) code {
-  @apply bg-transparent text-green-700 dark:text-green-300 font-bold text-sm uppercase tracking-wide;
+  @apply bg-transparent text-green-800 dark:text-green-200 font-bold text-sm uppercase tracking-wide;
+}
+
+.prose blockquote p:has(code:first-child:only-child) code::before {
+  content: "💡 ";
+  margin-right: 0.5rem;
 }
 
 /* Danger/Important callout (red) - Use: > ~~DANGER~~ */
 .prose
   blockquote:has(p:first-child:has(del:only-child:has(strong:only-child))) {
-  @apply not-italic bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-600 p-4 rounded-r-lg my-6;
+  @apply not-italic bg-gradient-to-r from-red-50 to-rose-100/50 dark:from-red-950/40 dark:to-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-5 rounded-r-xl my-6 shadow-sm;
 }
 
 .prose blockquote p:has(del:only-child:has(strong:only-child)) del strong {
-  @apply text-red-700 dark:text-red-300 block mb-2 text-sm font-bold uppercase tracking-wide no-underline;
+  @apply text-red-900 dark:text-red-200 block mb-3 text-sm font-bold uppercase tracking-wide no-underline;
+}
+
+.prose blockquote p:has(del:only-child:has(strong:only-child)) del strong::before {
+  content: "🚨 ";
+  margin-right: 0.5rem;
 }
 
 /* Task Lists */
