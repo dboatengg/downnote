@@ -31,6 +31,8 @@ export default function EditorPage() {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [storageInfo, setStorageInfo] = useState({ percentage: 0 });
   const [hasMigrated, setHasMigrated] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isGuest = !session?.user;
 
@@ -251,6 +253,7 @@ Start editing to see your changes in real-time! 🚀`;
 
   // Create new document
   const createNewDocument = useCallback(async () => {
+    setIsCreating(true);
     try {
       if (session?.user) {
         // Create via API
@@ -287,6 +290,8 @@ Start editing to see your changes in real-time! 🚀`;
     } catch (error) {
       console.error("Failed to create document:", error);
       toast.error("Failed to create document");
+    } finally {
+      setIsCreating(false);
     }
   }, [session, documents]);
 
@@ -476,6 +481,7 @@ Start editing to see your changes in real-time! 🚀`;
               onExport={isGuest ? handleExport : undefined}
               onImport={isGuest ? handleImport : undefined}
               isGuest={isGuest}
+              isCreating={isCreating}
             />
           </div>
         )}

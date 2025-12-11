@@ -14,6 +14,7 @@ import {
   Download,
   Upload,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 export interface Document {
@@ -29,11 +30,12 @@ interface DocumentSidebarProps {
   currentDocId: string | null;
   onDocumentSelect: (doc: Document) => void;
   onDocumentCreate: () => void;
-  onDocumentDelete: (id: string) => void;
+  onDocumentDelete: (id: string) => Promise<void>;
   onDocumentUpdate?: (id: string, updates: { title?: string }) => void;
   onExport?: () => void;
   onImport?: () => void;
   isGuest?: boolean;
+  isCreating?: boolean;
 }
 
 export function DocumentSidebar({
@@ -46,6 +48,7 @@ export function DocumentSidebar({
   onExport,
   onImport,
   isGuest = false,
+  isCreating = false,
 }: DocumentSidebarProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,6 +59,7 @@ export function DocumentSidebar({
     id: string;
     title: string;
   } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter documents based on search
   const filteredDocuments = documents.filter(
@@ -85,10 +89,15 @@ export function DocumentSidebar({
     setDeleteConfirm({ id, title });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirm) {
-      onDocumentDelete(deleteConfirm.id);
-      setDeleteConfirm(null);
+      setIsDeleting(true);
+      try {
+        await onDocumentDelete(deleteConfirm.id);
+      } finally {
+        setIsDeleting(false);
+        setDeleteConfirm(null);
+      }
     }
   };
 
@@ -102,10 +111,20 @@ export function DocumentSidebar({
       <div className="p-4 border-b border-slate-200 dark:border-slate-800">
         <button
           onClick={onDocumentCreate}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium shadow-sm"
+          disabled={isCreating}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Plus className="w-5 h-5" />
-          New Document
+          {isCreating ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Plus className="w-5 h-5" />
+              New Document
+            </>
+          )}
         </button>
       </div>
 
@@ -334,15 +353,18 @@ export function DocumentSidebar({
             <div className="flex gap-3 mt-6">
               <button
                 onClick={cancelDelete}
-                className="flex-1 px-4 py-2.5 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium"
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2.5 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium shadow-sm"
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Delete
+                {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
