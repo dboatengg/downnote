@@ -19,6 +19,7 @@ import {
 import { FileText, AlertTriangle } from "lucide-react";
 import { extractTitleFromMarkdown } from "@/lib/extract-title";
 import { toast } from "sonner";
+import { migrateGuestDocuments, hasGuestDocuments } from "@/lib/migrate-guest-documents";
 
 export default function EditorPage() {
   const { data: session, status } = useSession();
@@ -29,6 +30,7 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [storageInfo, setStorageInfo] = useState({ percentage: 0 });
+  const [hasMigrated, setHasMigrated] = useState(false);
 
   const isGuest = !session?.user;
 
@@ -188,6 +190,21 @@ Start editing to see your changes in real-time! 🚀`;
 
       try {
         if (session?.user) {
+          // Check if we need to migrate guest documents
+          if (!hasMigrated && hasGuestDocuments()) {
+            toast.info("Migrating your documents...");
+            const result = await migrateGuestDocuments();
+
+            if (result.success && result.migratedCount > 0) {
+              toast.success(`Successfully migrated ${result.migratedCount} document${result.migratedCount > 1 ? 's' : ''} from guest mode!`);
+            } else if (result.errors.length > 0) {
+              toast.error("Some documents failed to migrate. Please contact support.");
+              console.error("Migration errors:", result.errors);
+            }
+
+            setHasMigrated(true);
+          }
+
           // Load from API for authenticated users
           const response = await fetch("/api/documents");
           if (response.ok) {
@@ -230,7 +247,7 @@ Start editing to see your changes in real-time! 🚀`;
     };
 
     loadDocuments();
-  }, [session, status, createWelcomeDocument]);
+  }, [session, status, createWelcomeDocument, hasMigrated]);
 
   // Create new document
   const createNewDocument = useCallback(async () => {
