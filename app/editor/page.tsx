@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
 import { FileText, Plus, Trash2, Clock, PanelLeftClose, PanelLeft } from "lucide-react";
+import { extractTitleFromMarkdown } from "@/lib/extract-title";
 
 interface Document {
   id: string;
@@ -202,10 +203,13 @@ Start editing to see your changes in real-time! 🚀`;
 
   // Create new document
   const createNewDocument = async () => {
+    const content = "# Untitled Document\n\nStart writing...";
+    const title = extractTitleFromMarkdown(content);
+
     const newDoc: Document = {
       id: `doc-${Date.now()}`,
-      title: "Untitled Document",
-      content: "# Untitled Document\n\nStart writing...",
+      title,
+      content,
       updatedAt: new Date().toISOString(),
     };
 
@@ -216,8 +220,8 @@ Start editing to see your changes in real-time! 🚀`;
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: newDoc.title,
-            content: newDoc.content,
+            title,
+            content,
           }),
         });
 
@@ -242,8 +246,12 @@ Start editing to see your changes in real-time! 🚀`;
   const saveDocument = async (content: string) => {
     if (!currentDoc) return;
 
+    // Extract title from markdown content
+    const title = extractTitleFromMarkdown(content);
+
     const updatedDoc = {
       ...currentDoc,
+      title,
       content,
       updatedAt: new Date().toISOString(),
     };
@@ -254,7 +262,7 @@ Start editing to see your changes in real-time! 🚀`;
         await fetch(`/api/documents/${currentDoc.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ title, content }),
         });
 
         const updatedDocs = documents.map((doc) =>

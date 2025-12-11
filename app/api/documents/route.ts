@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { extractTitleFromMarkdown } from "@/lib/extract-title";
 
 // GET - List all documents for current user
 export async function GET() {
@@ -42,7 +43,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, content } = await request.json();
+    const body = await request.json();
+    const { content } = body;
+    let { title } = body;
+
+    // If content is provided but title is not, extract title from content
+    if (content && !title) {
+      title = extractTitleFromMarkdown(content);
+    }
 
     const document = await prisma.document.create({
       data: {

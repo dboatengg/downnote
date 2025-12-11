@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { extractTitleFromMarkdown } from "@/lib/extract-title";
 
 // GET - Get single document
 export async function GET(
@@ -53,7 +54,14 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const { title, content } = await request.json();
+    const body = await request.json();
+    const { content } = body;
+    let { title } = body;
+
+    // If content is provided but title is not, extract title from content
+    if (content !== undefined && title === undefined) {
+      title = extractTitleFromMarkdown(content);
+    }
 
     // Verify ownership
     const existing = await prisma.document.findFirst({
