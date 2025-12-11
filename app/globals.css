@@ -192,7 +192,8 @@
 
 /* Markdown Preview Styles */
 .prose {
-  max-width: 65ch;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .prose h1 {
@@ -233,10 +234,14 @@
 
 .prose pre {
   @apply bg-slate-900 dark:bg-slate-950 rounded-lg p-4 overflow-x-auto mb-4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .prose pre code {
   @apply bg-transparent text-slate-50 p-0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .prose blockquote {

@@ -320,6 +320,7 @@ export function MarkdownEditor({
                     base: markdownLanguage,
                     codeLanguages: languages,
                   }),
+                  EditorView.lineWrapping,
                   lightModeStyles,
                 ]}
                 onChange={handleChange}
@@ -341,7 +342,7 @@ export function MarkdownEditor({
 
             {/* Preview Pane */}
             <div className="h-full overflow-auto bg-white dark:bg-slate-900">
-              <div className="prose prose-slate dark:prose-invert max-w-none p-8">
+              <div className="prose prose-slate dark:prose-invert max-w-none p-8 mx-auto" style={{ maxWidth: '65ch' }}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -362,6 +363,7 @@ export function MarkdownEditor({
                   base: markdownLanguage,
                   codeLanguages: languages,
                 }),
+                EditorView.lineWrapping,
                 lightModeStyles,
               ]}
               onChange={handleChange}
