@@ -7,6 +7,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { languages } from "@codemirror/language-data";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import Split from "react-split";
@@ -231,7 +232,7 @@ export function MarkdownEditor({
             <div className="h-full overflow-auto bg-white dark:bg-slate-900">
               <div className="prose prose-slate dark:prose-invert max-w-none p-8">
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
                   rehypePlugins={[rehypeHighlight, rehypeRaw]}
                 >
                   {content || "*Start typing to see preview...*"}
@@ -271,7 +272,7 @@ export function MarkdownEditor({
           <div className="h-full overflow-auto bg-white dark:bg-slate-900">
             <div className="prose prose-slate dark:prose-invert max-w-none p-8">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw]}
               >
                 {content || "*No content to preview*"}
