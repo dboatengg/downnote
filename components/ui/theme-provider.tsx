@@ -23,7 +23,7 @@ const ThemeProviderContext = React.createContext<
 export function ThemeProvider({
   children,
   attribute = "class",
-  defaultTheme = "system",
+  defaultTheme = "dark",
   enableSystem = true,
   ...props
 }: ThemeProviderProps) {
@@ -36,6 +36,9 @@ export function ThemeProvider({
     const stored = localStorage.getItem("downnote-theme") as Theme;
     if (stored) {
       setTheme(stored);
+    } else {
+      // Set dark as default for first-time users
+      setTheme("dark");
     }
   }, []);
 
