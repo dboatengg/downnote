@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Work+Sans:wght@400;500;600;700&display=swap");
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
+  /* CSS Variables for fonts */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --font-crimson: "Crimson Pro", serif;
+    --font-work-sans: "Work Sans", system-ui, sans-serif;
+    --font-ibm-plex: "IBM Plex Mono", ui-monospace, monospace;
+
+    /* Light theme colors */
+    --background: 255 255 255;
+    --foreground: 15 23 42;
+    --muted: 241 245 249;
+    --border: 226 232 240;
+  }
+
+  .dark {
+    /* Dark theme colors - sophisticated slate/teal */
+    --background: 15 23 42;
+    --foreground: 241 245 249;
+    --muted: 30 41 59;
+    --border: 51 65 85;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50;
+    font-family: var(--font-work-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Beautiful headings with serif font */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-crimson);
+    font-weight: 600;
+  }
+
+  /* Monospace for code */
+  code,
+  pre {
+    font-family: var(--font-ibm-plex);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Custom scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-600;
+  }
+
+  /* Glass morphism effect for modern UI */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  /* Markdown preview styling */
+  .prose {
+    @apply max-w-none text-slate-700 dark:text-slate-300;
+  }
+
+  .prose h1 {
+    @apply text-4xl font-bold mt-8 mb-4 text-slate-900 dark:text-slate-50;
+    font-family: var(--font-crimson);
+  }
+
+  .prose h2 {
+    @apply text-3xl font-semibold mt-8 mb-3 text-slate-900 dark:text-slate-50;
+    font-family: var(--font-crimson);
+  }
+
+  .prose h3 {
+    @apply text-2xl font-semibold mt-6 mb-3 text-slate-900 dark:text-slate-50;
+    font-family: var(--font-crimson);
+  }
+
+  .prose p {
+    @apply my-4 leading-7;
+  }
+
+  .prose a {
+    @apply text-primary-600 dark:text-primary-400 hover:underline;
+  }
+
+  .prose code {
+    @apply bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm;
+    font-family: var(--font-ibm-plex);
+  }
+
+  .prose pre {
+    @apply bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-4;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-primary-500 pl-4 italic my-4 text-slate-600 dark:text-slate-400;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply my-4 ml-6;
+  }
+
+  .prose li {
+    @apply my-2;
+  }
+
+  .prose table {
+    @apply w-full my-4 border-collapse;
+  }
+
+  .prose th {
+    @apply bg-slate-100 dark:bg-slate-800 font-semibold p-2 border border-slate-300 dark:border-slate-700;
+  }
+
+  .prose td {
+    @apply p-2 border border-slate-300 dark:border-slate-700;
+  }
 }
