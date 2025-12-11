@@ -22,6 +22,7 @@ export default function EditorPage() {
   const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   // Show sidebar by default on desktop
   useEffect(() => {
@@ -329,7 +330,7 @@ Start editing to see your changes in real-time! 🚀`;
 
   return (
     <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
-      <Header />
+      {!isFocusMode && <Header />}
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
@@ -436,6 +437,7 @@ Start editing to see your changes in real-time! 🚀`;
               autoSave={true}
               onToggleSidebar={() => setShowSidebar(!showSidebar)}
               showSidebar={showSidebar}
+              onFocusModeChange={setIsFocusMode}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-center p-8">
