@@ -5,15 +5,20 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
-import { FileText, Plus, Trash2, Clock, PanelLeftClose, PanelLeft } from "lucide-react";
+import { DocumentSidebar } from "@/components/ui/document-sidebar";
+import type { Document } from "@/components/ui/document-sidebar";
+import {
+  getGuestDocuments,
+  createGuestDocument,
+  updateGuestDocument,
+  deleteGuestDocument,
+  exportGuestDocuments,
+  importGuestDocuments,
+  getStorageInfo,
+} from "@/lib/guest-storage";
+import { FileText, AlertTriangle } from "lucide-react";
 import { extractTitleFromMarkdown } from "@/lib/extract-title";
-
-interface Document {
-  id: string;
-  title: string;
-  content: string;
-  updatedAt: string;
-}
+import { toast } from "sonner";
 
 export default function EditorPage() {
   const { data: session, status } = useSession();
@@ -23,6 +28,9 @@ export default function EditorPage() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [storageInfo, setStorageInfo] = useState({ percentage: 0 });
+
+  const isGuest = !session?.user;
 
   // Show sidebar by default on desktop
   useEffect(() => {
@@ -135,11 +143,13 @@ console.log(fibonacci(10));
 
 Start editing to see your changes in real-time! 🚀`;
 
+    const now = new Date().toISOString();
     const welcomeDoc: Document = {
       id: `doc-${Date.now()}`,
       title: "Welcome to DownNote",
       content: welcomeContent,
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
 
     if (session?.user) {
@@ -163,22 +173,22 @@ Start editing to see your changes in real-time! 🚀`;
         console.error("Failed to create welcome document:", error);
       }
     } else {
-      // Save to localStorage
+      // Save using guest storage
       const docs = [welcomeDoc];
       setDocuments(docs);
       setCurrentDoc(welcomeDoc);
       localStorage.setItem("downnote-documents", JSON.stringify(docs));
     }
-  }, [session, setDocuments, setCurrentDoc]);
+  }, [session]);
 
   // Load documents (from localStorage for guests, API for authenticated users)
   useEffect(() => {
     const loadDocuments = async () => {
       if (status === "loading") return;
 
-      if (session?.user) {
-        // Load from API for authenticated users
-        try {
+      try {
+        if (session?.user) {
+          // Load from API for authenticated users
           const response = await fetch("/api/documents");
           if (response.ok) {
             const docs = await response.json();
@@ -189,15 +199,12 @@ Start editing to see your changes in real-time! 🚀`;
               // Create welcome document for new authenticated users
               createWelcomeDocument();
             }
+          } else {
+            toast.error("Failed to load documents");
           }
-        } catch (error) {
-          console.error("Failed to load documents:", error);
-        }
-      } else {
-        // Load from localStorage for guests
-        const saved = localStorage.getItem("downnote-documents");
-        if (saved) {
-          const docs = JSON.parse(saved);
+        } else {
+          // Load from guest storage
+          const docs = getGuestDocuments();
           setDocuments(docs);
           if (docs.length > 0) {
             setCurrentDoc(docs[0]);
@@ -205,129 +212,221 @@ Start editing to see your changes in real-time! 🚀`;
             // Create welcome document for new guests
             createWelcomeDocument();
           }
-        } else {
-          // First time guest - create welcome document
-          createWelcomeDocument();
+
+          // Check storage usage
+          const info = getStorageInfo();
+          setStorageInfo(info);
+
+          if (info.percentage > 80) {
+            toast.warning("Storage almost full! Consider signing in for unlimited storage.");
+          }
         }
+      } catch (error) {
+        console.error("Failed to load documents:", error);
+        toast.error("Failed to load documents");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadDocuments();
   }, [session, status, createWelcomeDocument]);
 
   // Create new document
-  const createNewDocument = async () => {
-    const content = "# Untitled Document\n\nStart writing...";
-    const title = extractTitleFromMarkdown(content);
-
-    const newDoc: Document = {
-      id: `doc-${Date.now()}`,
-      title,
-      content,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (session?.user) {
-      // Save to API
-      try {
+  const createNewDocument = useCallback(async () => {
+    try {
+      if (session?.user) {
+        // Create via API
         const response = await fetch("/api/documents", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title,
-            content,
+            title: "Untitled Document",
+            content: "# Untitled Document\n\nStart writing...",
           }),
         });
 
         if (response.ok) {
-          const savedDoc = await response.json();
-          setDocuments([savedDoc, ...documents]);
-          setCurrentDoc(savedDoc);
+          const newDoc = await response.json();
+          setDocuments([newDoc, ...documents]);
+          setCurrentDoc(newDoc);
+          toast.success("Document created");
+        } else {
+          toast.error("Failed to create document");
+        }
+      } else {
+        // Create in guest storage
+        const newDoc = createGuestDocument();
+        const updatedDocs = [newDoc, ...documents];
+        setDocuments(updatedDocs);
+        setCurrentDoc(newDoc);
+
+        // Update storage info
+        const info = getStorageInfo();
+        setStorageInfo(info);
+
+        toast.success("Document created");
+      }
+    } catch (error) {
+      console.error("Failed to create document:", error);
+      toast.error("Failed to create document");
+    }
+  }, [session, documents]);
+
+  // Update document
+  const handleUpdateDocument = useCallback(
+    async (id: string, updates: { title?: string; content?: string }) => {
+      try {
+        if (session?.user) {
+          // Update via API
+          const response = await fetch(`/api/documents/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates),
+          });
+
+          if (response.ok) {
+            const updatedDoc = await response.json();
+            setDocuments(
+              documents.map((doc) => (doc.id === id ? updatedDoc : doc))
+            );
+            if (currentDoc?.id === id) {
+              setCurrentDoc(updatedDoc);
+            }
+          } else {
+            toast.error("Failed to update document");
+          }
+        } else {
+          // Update in guest storage
+          const updatedDoc = updateGuestDocument(id, updates);
+          if (updatedDoc) {
+            const updatedDocs = documents.map((doc) =>
+              doc.id === id ? updatedDoc : doc
+            );
+            setDocuments(updatedDocs);
+            if (currentDoc?.id === id) {
+              setCurrentDoc(updatedDoc);
+            }
+          }
         }
       } catch (error) {
-        console.error("Failed to create document:", error);
+        console.error("Failed to update document:", error);
+        toast.error("Failed to update document");
       }
-    } else {
-      // Save to localStorage
-      const updatedDocs = [newDoc, ...documents];
-      setDocuments(updatedDocs);
-      setCurrentDoc(newDoc);
-      localStorage.setItem("downnote-documents", JSON.stringify(updatedDocs));
-    }
-  };
+    },
+    [session, documents, currentDoc]
+  );
 
-  // Save document
-  const saveDocument = async (content: string) => {
-    if (!currentDoc) return;
+  // Save document content
+  const saveDocument = useCallback(
+    async (content: string) => {
+      if (!currentDoc) return;
 
-    // Extract title from markdown content
-    const title = extractTitleFromMarkdown(content);
+      // Extract title from markdown content
+      const title = extractTitleFromMarkdown(content);
 
-    const updatedDoc = {
-      ...currentDoc,
-      title,
-      content,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (session?.user) {
-      // Save to API
-      try {
-        await fetch(`/api/documents/${currentDoc.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, content }),
-        });
-
-        const updatedDocs = documents.map((doc) =>
-          doc.id === currentDoc.id ? updatedDoc : doc
-        );
-        setDocuments(updatedDocs);
-        setCurrentDoc(updatedDoc);
-      } catch (error) {
-        console.error("Failed to save document:", error);
-      }
-    } else {
-      // Save to localStorage
-      const updatedDocs = documents.map((doc) =>
-        doc.id === currentDoc.id ? updatedDoc : doc
-      );
-      setDocuments(updatedDocs);
-      setCurrentDoc(updatedDoc);
-      localStorage.setItem("downnote-documents", JSON.stringify(updatedDocs));
-    }
-  };
+      await handleUpdateDocument(currentDoc.id, { content, title });
+    },
+    [currentDoc, handleUpdateDocument]
+  );
 
   // Delete document
-  const deleteDocument = async (docId: string) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
-
-    if (session?.user) {
-      // Delete from API
+  const handleDeleteDocument = useCallback(
+    async (id: string) => {
       try {
-        await fetch(`/api/documents/${docId}`, {
-          method: "DELETE",
-        });
+        if (session?.user) {
+          // Delete via API
+          const response = await fetch(`/api/documents/${id}`, {
+            method: "DELETE",
+          });
 
-        const updatedDocs = documents.filter((doc) => doc.id !== docId);
-        setDocuments(updatedDocs);
-        if (currentDoc?.id === docId) {
-          setCurrentDoc(updatedDocs[0] || null);
+          if (response.ok) {
+            const updatedDocs = documents.filter((doc) => doc.id !== id);
+            setDocuments(updatedDocs);
+            if (currentDoc?.id === id) {
+              setCurrentDoc(updatedDocs[0] || null);
+            }
+            toast.success("Document deleted");
+          } else {
+            toast.error("Failed to delete document");
+          }
+        } else {
+          // Delete from guest storage
+          const success = deleteGuestDocument(id);
+          if (success) {
+            const updatedDocs = documents.filter((doc) => doc.id !== id);
+            setDocuments(updatedDocs);
+            if (currentDoc?.id === id) {
+              setCurrentDoc(updatedDocs[0] || null);
+            }
+
+            // Update storage info
+            const info = getStorageInfo();
+            setStorageInfo(info);
+
+            toast.success("Document deleted");
+          } else {
+            toast.error("Failed to delete document");
+          }
         }
       } catch (error) {
         console.error("Failed to delete document:", error);
+        toast.error("Failed to delete document");
       }
-    } else {
-      // Delete from localStorage
-      const updatedDocs = documents.filter((doc) => doc.id !== docId);
-      setDocuments(updatedDocs);
-      if (currentDoc?.id === docId) {
-        setCurrentDoc(updatedDocs[0] || null);
-      }
-      localStorage.setItem("downnote-documents", JSON.stringify(updatedDocs));
+    },
+    [session, documents, currentDoc]
+  );
+
+  // Export documents
+  const handleExport = useCallback(() => {
+    try {
+      const json = exportGuestDocuments();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `downnote-backup-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Documents exported");
+    } catch (error) {
+      console.error("Failed to export:", error);
+      toast.error("Failed to export documents");
     }
-  };
+  }, []);
+
+  // Import documents
+  const handleImport = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const success = importGuestDocuments(text);
+
+        if (success) {
+          const docs = getGuestDocuments();
+          setDocuments(docs);
+          if (docs.length > 0) {
+            setCurrentDoc(docs[0]);
+          }
+          toast.success("Documents imported");
+        } else {
+          toast.error("Invalid import file");
+        }
+      } catch (error) {
+        console.error("Failed to import:", error);
+        toast.error("Failed to import documents");
+      }
+    };
+    input.click();
+  }, []);
 
   if (loading) {
     return (
@@ -349,87 +448,18 @@ Start editing to see your changes in real-time! 🚀`;
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         {showSidebar && (
-          <div className="fixed lg:relative inset-y-0 left-0 z-40 w-64 lg:w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col shadow-lg lg:shadow-none">
-            {/* Sidebar Header with Toggle */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <h2 className="font-semibold text-slate-900 dark:text-slate-50">Documents</h2>
-              <button
-                onClick={() => setShowSidebar(false)}
-                className="hidden lg:block p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Hide sidebar"
-              >
-                <PanelLeftClose className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* New Document Button */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-              <button
-                onClick={createNewDocument}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium"
-              >
-                <Plus className="w-5 h-5" />
-                New Document
-              </button>
-            </div>
-
-            {/* Documents List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {documents.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
-                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  No documents yet
-                </div>
-              ) : (
-                documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className={`group p-3 rounded-lg cursor-pointer transition-colors ${
-                      currentDoc?.id === doc.id
-                        ? "bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500"
-                        : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-2 border-transparent"
-                    }`}
-                    onClick={() => setCurrentDoc(doc)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-slate-900 dark:text-slate-50 truncate text-sm">
-                          {doc.title}
-                        </h3>
-                        <div className="flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(doc.updatedAt)}
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteDocument(doc.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-opacity"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Guest Notice */}
-            {!session && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-yellow-50 dark:bg-yellow-900/20">
-                <p className="text-xs text-yellow-800 dark:text-yellow-200 mb-2">
-                  <strong>Guest Mode:</strong> Documents saved locally
-                </p>
-                <button
-                  onClick={() => router.push("/auth/signin")}
-                  className="w-full text-xs px-3 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700 transition-colors font-medium"
-                >
-                  Sign in to sync
-                </button>
-              </div>
-            )}
+          <div className="fixed lg:relative inset-y-0 left-0 z-40 shadow-lg lg:shadow-none">
+            <DocumentSidebar
+              documents={documents}
+              currentDocId={currentDoc?.id || null}
+              onDocumentSelect={setCurrentDoc}
+              onDocumentCreate={createNewDocument}
+              onDocumentDelete={handleDeleteDocument}
+              onDocumentUpdate={(id, updates) => handleUpdateDocument(id, updates)}
+              onExport={isGuest ? handleExport : undefined}
+              onImport={isGuest ? handleImport : undefined}
+              isGuest={isGuest}
+            />
           </div>
         )}
 
@@ -444,15 +474,40 @@ Start editing to see your changes in real-time! 🚀`;
         {/* Editor Area */}
         <div className="flex-1 flex flex-col">
           {currentDoc ? (
-            <MarkdownEditor
-              key={currentDoc.id}
-              initialContent={currentDoc.content}
-              onSave={saveDocument}
-              autoSave={true}
-              onToggleSidebar={() => setShowSidebar(!showSidebar)}
-              showSidebar={showSidebar}
-              onFocusModeChange={setIsFocusMode}
-            />
+            <>
+              {/* Storage warning for guests */}
+              {isGuest && storageInfo.percentage > 80 && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-6 py-3">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                        Storage {storageInfo.percentage.toFixed(0)}% full
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                        Sign in to get unlimited storage and sync across devices
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => router.push("/auth/signin")}
+                      className="px-4 py-2 rounded-lg bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors text-sm font-medium flex-shrink-0"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <MarkdownEditor
+                key={currentDoc.id}
+                initialContent={currentDoc.content}
+                onSave={saveDocument}
+                autoSave={true}
+                onToggleSidebar={() => setShowSidebar(!showSidebar)}
+                showSidebar={showSidebar}
+                onFocusModeChange={setIsFocusMode}
+              />
+            </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
@@ -465,7 +520,7 @@ Start editing to see your changes in real-time! 🚀`;
                 </p>
                 <button
                   onClick={createNewDocument}
-                  className="px-6 py-3 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium"
+                  className="px-6 py-3 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium shadow-sm"
                 >
                   Create Your First Document
                 </button>
@@ -476,23 +531,4 @@ Start editing to see your changes in real-time! 🚀`;
       </div>
     </div>
   );
-}
-
-// Helper to format dates
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-
-  return date.toLocaleDateString();
 }
