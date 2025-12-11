@@ -1,10 +1,6 @@
-/* Import Google Fonts - must be before Tailwind */
-@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Work+Sans:wght@400;500;600;700&display=swap");
-
 @import "tailwindcss";
 
 @theme {
-  /* Custom color palette */
   --color-primary-50: #f0fdfa;
   --color-primary-100: #ccfbf1;
   --color-primary-200: #99f6e4;
@@ -26,15 +22,10 @@
   --color-accent-700: #92400e;
   --color-accent-800: #78350f;
   --color-accent-900: #451a03;
-
-  /* Font families */
-  --font-sans: "Work Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-  --font-serif: "Crimson Pro", Georgia, serif;
 }
 
 @layer base {
-  /* CSS Variables for fonts (for backward compatibility) */
+  /* CSS Variables for fonts */
   :root {
     --font-crimson: "Crimson Pro", serif;
     --font-work-sans: "Work Sans", system-ui, sans-serif;
