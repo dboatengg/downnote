@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@/components/ui/theme-provider";
-import { Sun, Moon, FileText } from "lucide-react";
+import { Sun, Moon, FileText, LogOut, User } from "lucide-react";
+import Image from "next/image";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
+  const { data: session, status } = useSession();
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -37,13 +40,46 @@ export function Header() {
             )}
           </button>
 
-          {/* Sign In Button (we'll make this functional later) */}
-          <Link
-            href="/auth/signin"
-            className="px-4 py-2 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium text-sm"
-          >
-            Sign In
-          </Link>
+          {/* User Menu */}
+          {status === "loading" ? (
+            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+          ) : session ? (
+            <div className="flex items-center gap-3">
+              {/* User Info */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    width={24}
+                    height={24}
+                    alt={session.user.name || "User"}
+                    className="w-6 h-6 rounded-full"
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                )}
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {session.user?.name || session.user?.email}
+                </span>
+              </div>
+
+              {/* Sign Out Button */}
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/auth/signin"
+              className="px-4 py-2 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium text-sm"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -104,7 +104,7 @@ export default function SignUpPage() {
                 Create Account
               </h1>
               <p className="text-slate-600 dark:text-slate-400">
-                Start writing with DownNote today
+                Start writing with DownNote today!
               </p>
             </div>
 
