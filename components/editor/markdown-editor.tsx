@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { EditorView } from "@codemirror/view";
 import { languages } from "@codemirror/language-data";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -92,6 +93,64 @@ export function MarkdownEditor({
   };
 
   const editorTheme = theme === "dark" ? oneDark : undefined;
+
+  // Custom styles for light mode editor text
+  const lightModeStyles = theme !== "dark"
+    ? EditorView.theme({
+        "&": {
+          color: "#1e293b", // slate-800
+          backgroundColor: "#ffffff",
+        },
+        ".cm-content": {
+          caretColor: "#1e293b",
+        },
+        "&.cm-focused .cm-cursor": {
+          borderLeftColor: "#1e293b",
+        },
+        "&.cm-focused .cm-selectionBackground, ::selection": {
+          backgroundColor: "#bfdbfe", // blue-200
+        },
+        ".cm-activeLine": {
+          backgroundColor: "#f8fafc", // slate-50
+        },
+        ".cm-activeLineGutter": {
+          backgroundColor: "#f1f5f9", // slate-100
+        },
+        ".cm-gutters": {
+          backgroundColor: "#f8fafc",
+          color: "#94a3b8", // slate-400
+          border: "none",
+        },
+        ".cm-line": {
+          color: "#1e293b", // slate-800 - default text
+        },
+        // Markdown specific syntax
+        ".cm-header": {
+          color: "#0f172a", // slate-900 - headers
+          fontWeight: "600",
+        },
+        ".cm-strong": {
+          color: "#0f172a", // slate-900 - bold
+          fontWeight: "700",
+        },
+        ".cm-emphasis": {
+          color: "#334155", // slate-700 - italic
+          fontStyle: "italic",
+        },
+        ".cm-link": {
+          color: "#2563eb", // blue-600 - links
+        },
+        ".cm-url": {
+          color: "#3b82f6", // blue-500 - urls
+        },
+        ".cm-meta": {
+          color: "#64748b", // slate-500 - metadata (like ###)
+        },
+        ".cm-comment": {
+          color: "#64748b", // slate-500 - comments
+        },
+      })
+    : EditorView.theme({});
 
   return (
     <div className="flex flex-col h-full">
@@ -210,6 +269,7 @@ export function MarkdownEditor({
                     base: markdownLanguage,
                     codeLanguages: languages,
                   }),
+                  lightModeStyles,
                 ]}
                 onChange={handleChange}
                 className="h-full text-base"
@@ -251,6 +311,7 @@ export function MarkdownEditor({
                   base: markdownLanguage,
                   codeLanguages: languages,
                 }),
+                lightModeStyles,
               ]}
               onChange={handleChange}
               className="h-full text-base"
