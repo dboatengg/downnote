@@ -30,9 +30,7 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [storageInfo, setStorageInfo] = useState({ percentage: 0 });
-  const [hasMigrated, setHasMigrated] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const isGuest = !session?.user;
 
@@ -192,9 +190,12 @@ Start editing to see your changes in real-time! 🚀`;
 
       try {
         if (session?.user) {
-          // Check if we need to migrate guest documents
-          if (!hasMigrated && hasGuestDocuments()) {
-            toast.info("Migrating your documents...");
+          // Check if we have guest documents to potentially migrate
+          const hasGuest = hasGuestDocuments();
+
+          // Migrate guest documents if any exist
+          // The migration function will skip unmodified default welcome notes
+          if (hasGuest) {
             const result = await migrateGuestDocuments();
 
             if (result.success && result.migratedCount > 0) {
@@ -203,8 +204,6 @@ Start editing to see your changes in real-time! 🚀`;
               toast.error("Some documents failed to migrate. Please contact support.");
               console.error("Migration errors:", result.errors);
             }
-
-            setHasMigrated(true);
           }
 
           // Load from API for authenticated users
@@ -249,7 +248,7 @@ Start editing to see your changes in real-time! 🚀`;
     };
 
     loadDocuments();
-  }, [session, status, createWelcomeDocument, hasMigrated]);
+  }, [session, status, createWelcomeDocument]);
 
   // Create new document
   const createNewDocument = useCallback(async () => {

@@ -6,9 +6,27 @@ export interface MigrationResult {
   errors: string[];
 }
 
+// The default welcome note content - if guest doc matches this, it hasn't been edited
+const DEFAULT_WELCOME_CONTENT_START = `# Welcome to DownNote! 📝
+
+A beautiful markdown editor with real-time preview.
+
+## Basic Formatting`;
+
+/**
+ * Check if a document is the unmodified default welcome note
+ */
+function isDefaultWelcomeNote(doc: { title: string; content: string }): boolean {
+  return (
+    doc.title === "Welcome to DownNote" &&
+    doc.content.startsWith(DEFAULT_WELCOME_CONTENT_START)
+  );
+}
+
 /**
  * Migrates guest documents from localStorage to the database
  * when a user signs in for the first time
+ * Only migrates documents that have been modified from the default welcome note
  */
 export async function migrateGuestDocuments(): Promise<MigrationResult> {
   const result: MigrationResult = {
@@ -25,8 +43,17 @@ export async function migrateGuestDocuments(): Promise<MigrationResult> {
       return result;
     }
 
+    // Filter out unmodified default welcome notes
+    const docsToMigrate = guestDocs.filter(doc => !isDefaultWelcomeNote(doc));
+
+    if (docsToMigrate.length === 0) {
+      // All documents are unmodified welcome notes, just clear them
+      localStorage.removeItem("downnote-documents");
+      return result;
+    }
+
     // Upload each document to the API
-    for (const doc of guestDocs) {
+    for (const doc of docsToMigrate) {
       try {
         const response = await fetch("/api/documents", {
           method: "POST",
@@ -50,7 +77,7 @@ export async function migrateGuestDocuments(): Promise<MigrationResult> {
     }
 
     // If migration was successful, clear guest documents from localStorage
-    if (result.success && result.migratedCount > 0) {
+    if (result.success) {
       localStorage.removeItem("downnote-documents");
     }
 
