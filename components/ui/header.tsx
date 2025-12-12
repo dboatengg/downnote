@@ -94,29 +94,36 @@ export function Header() {
       {/* Sign Out Confirmation Modal */}
       {showSignOutModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-in fade-in duration-200"
           onClick={() => setShowSignOutModal(false)}
         >
           <div
-            className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6"
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 max-w-md w-full p-6 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">
-              Sign Out
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              Are you sure you want to sign out? Any unsaved changes will be lost.
-            </p>
+            <div className="flex items-start gap-4 mb-6">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800">
+                <LogOut className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">
+                  Sign Out
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Are you sure you want to sign out? Any unsaved changes will be lost.
+                </p>
+              </div>
+            </div>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowSignOutModal(false)}
-                className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium"
+                className="px-4 py-2.5 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 rounded-lg bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium"
+                className="px-4 py-2.5 rounded-lg bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium shadow-sm"
               >
                 Sign Out
               </button>
