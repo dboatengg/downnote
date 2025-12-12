@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
 import { DocumentSidebar } from "@/components/ui/document-sidebar";
@@ -24,6 +24,7 @@ import { migrateGuestDocuments, hasGuestDocuments } from "@/lib/migrate-guest-do
 export default function EditorPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -211,7 +212,17 @@ Start editing to see your changes in real-time! 🚀`;
           if (response.ok) {
             const docs = await response.json();
             setDocuments(docs);
-            if (docs.length > 0) {
+
+            // Check if there's a document ID in the URL
+            const docId = searchParams.get("id");
+            if (docId && docs.length > 0) {
+              const targetDoc = docs.find((d: Document) => d.id === docId);
+              if (targetDoc) {
+                setCurrentDoc(targetDoc);
+              } else {
+                setCurrentDoc(docs[0]);
+              }
+            } else if (docs.length > 0) {
               setCurrentDoc(docs[0]);
             } else {
               // Create welcome document for new authenticated users
@@ -248,7 +259,7 @@ Start editing to see your changes in real-time! 🚀`;
     };
 
     loadDocuments();
-  }, [session, status, createWelcomeDocument]);
+  }, [session, status, createWelcomeDocument, searchParams]);
 
   // Create new document
   const createNewDocument = useCallback(async () => {
