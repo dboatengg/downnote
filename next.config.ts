@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    // Disable static optimization for pages with dynamic behavior
+    outputFileTracingIncludes: {},
+  },
 };
 
 export default nextConfig;
