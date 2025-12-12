@@ -9,13 +9,18 @@ import { languages } from "@codemirror/language-data";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import remarkEmoji from "remark-emoji";
+import remarkAbbr from "@syenchuk/remark-abbr";
+import remarkMath from "remark-math";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
+import rehypeKatex from "rehype-katex";
 import Split from "react-split";
 import { useTheme } from "@/components/ui/theme-provider";
 import { Eye, Edit, Columns, Download, Save, PanelLeftClose, PanelLeft, Maximize2, Minimize2, FileText, ChevronUp, ChevronDown } from "lucide-react";
 import { calculateTextStats, formatReadingTime } from "@/lib/word-count";
 import "highlight.js/styles/github-dark.css";
+import "katex/dist/katex.min.css";
 
 type ViewMode = "split" | "edit" | "preview";
 
@@ -52,7 +57,6 @@ export function MarkdownEditor({
   });
   const editorRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const isScrollingSyncRef = useRef(false);
 
   // Calculate text statistics
   const stats = calculateTextStats(content);
@@ -99,51 +103,58 @@ export function MarkdownEditor({
 
     if (!editorEl || !previewEl) return;
 
-    // CodeMirror creates a .cm-scroller element that handles scrolling
-    const editorScroller = editorEl.querySelector('.cm-scroller') as HTMLElement;
-
-    if (!editorScroller) return;
+    let editorScroller: HTMLElement | null = null;
+    let isScrolling = false;
 
     const handleEditorScroll = () => {
-      if (isScrollingSyncRef.current) return;
-      isScrollingSyncRef.current = true;
+      if (isScrolling) return;
+      isScrolling = true;
 
-      const scrollPercentage = editorScroller.scrollTop / (editorScroller.scrollHeight - editorScroller.clientHeight);
-      const targetScroll = scrollPercentage * (previewEl.scrollHeight - previewEl.clientHeight);
+      const percentage = editorScroller!.scrollTop / (editorScroller!.scrollHeight - editorScroller!.clientHeight);
+      const targetScroll = percentage * (previewEl.scrollHeight - previewEl.clientHeight);
 
       if (isFinite(targetScroll)) {
         previewEl.scrollTop = targetScroll;
       }
 
-      setTimeout(() => {
-        isScrollingSyncRef.current = false;
-      }, 50);
+      requestAnimationFrame(() => {
+        isScrolling = false;
+      });
     };
 
     const handlePreviewScroll = () => {
-      if (isScrollingSyncRef.current) return;
-      isScrollingSyncRef.current = true;
+      if (isScrolling) return;
+      isScrolling = true;
 
-      const scrollPercentage = previewEl.scrollTop / (previewEl.scrollHeight - previewEl.clientHeight);
-      const targetScroll = scrollPercentage * (editorScroller.scrollHeight - editorScroller.clientHeight);
+      const percentage = previewEl.scrollTop / (previewEl.scrollHeight - previewEl.clientHeight);
+      const targetScroll = percentage * (editorScroller!.scrollHeight - editorScroller!.clientHeight);
 
       if (isFinite(targetScroll)) {
-        editorScroller.scrollTop = targetScroll;
+        editorScroller!.scrollTop = targetScroll;
       }
 
-      setTimeout(() => {
-        isScrollingSyncRef.current = false;
-      }, 50);
+      requestAnimationFrame(() => {
+        isScrolling = false;
+      });
     };
 
-    editorScroller.addEventListener("scroll", handleEditorScroll);
-    previewEl.addEventListener("scroll", handlePreviewScroll);
+    const timer = setTimeout(() => {
+      editorScroller = editorEl.querySelector('.cm-scroller') as HTMLElement;
+      if (!editorScroller) return;
+
+      editorScroller.addEventListener("scroll", handleEditorScroll);
+      previewEl.addEventListener("scroll", handlePreviewScroll);
+    }, 100);
 
     return () => {
-      editorScroller.removeEventListener("scroll", handleEditorScroll);
-      previewEl.removeEventListener("scroll", handlePreviewScroll);
+      clearTimeout(timer);
+      if (editorScroller) {
+        editorScroller.removeEventListener("scroll", handleEditorScroll);
+        previewEl.removeEventListener("scroll", handlePreviewScroll);
+      }
     };
-  }, [viewMode, content]);
+  }, [viewMode]);
+
 
   const handleChange = useCallback((value: string) => {
     setContent(value);
@@ -368,22 +379,24 @@ export function MarkdownEditor({
       </div>
 
       {/* Editor/Preview Area */}
-      <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950 relative">
         {viewMode === "split" ? (
-          <Split
-            className="flex h-full"
-            sizes={[50, 50]}
-            minSize={300}
-            gutterSize={10}
-            direction="horizontal"
-            cursor="col-resize"
-            gutterStyle={(_dimension, gutterSize) => ({
-              backgroundColor: theme === "dark" ? "#1e293b" : "#e2e8f0",
-              cursor: "col-resize",
-              width: `${gutterSize}px`,
-            })}
-            gutterAlign="center"
-          >
+          <>
+            <Split
+              className="flex h-full"
+              sizes={[50, 50]}
+              minSize={300}
+              gutterSize={10}
+              direction="horizontal"
+              cursor="col-resize"
+              gutterStyle={(_dimension, gutterSize) => ({
+                backgroundColor: theme === "dark" ? "#1e293b" : "#e2e8f0",
+                cursor: "col-resize",
+                width: `${gutterSize}px`,
+                position: "relative",
+              })}
+              gutterAlign="center"
+            >
             {/* Editor Pane */}
             <div ref={editorRef} className="h-full overflow-auto">
               <CodeMirror
@@ -416,17 +429,25 @@ export function MarkdownEditor({
             </div>
 
             {/* Preview Pane */}
-            <div ref={previewRef} className="h-full overflow-auto bg-white dark:bg-slate-900">
+            <div
+              ref={previewRef}
+              className="h-full overflow-auto bg-white dark:bg-slate-900 [&::-webkit-scrollbar]:hidden"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+            >
               <div className="prose prose-slate dark:prose-invert max-w-none p-8">
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, remarkBreaks]}
-                  rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                  remarkPlugins={[remarkGfm, remarkBreaks, remarkEmoji, remarkAbbr, remarkMath]}
+                  rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeKatex]}
                 >
                   {content || "*Start typing to see preview...*"}
                 </ReactMarkdown>
               </div>
             </div>
           </Split>
+          </>
         ) : viewMode === "edit" ? (
           <div className="h-full overflow-auto">
             <CodeMirror
@@ -461,8 +482,8 @@ export function MarkdownEditor({
           <div className="h-full overflow-auto bg-white dark:bg-slate-900">
             <div className="prose prose-slate dark:prose-invert max-w-none p-8">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkBreaks]}
-                rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                remarkPlugins={[remarkGfm, remarkBreaks, remarkEmoji, remarkAbbr, remarkMath]}
+                rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeKatex]}
               >
                 {content || "*No content to preview*"}
               </ReactMarkdown>
