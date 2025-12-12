@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { Header } from "@/components/ui/header";
 import {
   FileText,
@@ -13,7 +15,14 @@ import {
   Heart,
 } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+
+  // If user is authenticated, redirect to dashboard
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-primary-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
       <Header />
