@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  trustHost: true,
   providers: [
     // Google OAuth
     Google({
@@ -103,6 +104,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
       }
       return session;
+    },
+
+    async redirect({ url, baseUrl }) {
+      // After sign in, redirect to dashboard
+      if (url.startsWith(baseUrl)) {
+        return `${baseUrl}/dashboard`;
+      }
+      // Allow callback URLs on the same origin
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      return baseUrl;
     },
   },
 

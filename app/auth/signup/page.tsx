@@ -75,7 +75,7 @@ export default function SignUpPage() {
             "Account created but sign in failed. Please sign in manually."
           );
         } else {
-          router.push("/editor");
+          router.push("/dashboard");
         }
       }, 1000);
     } catch (error) {
@@ -87,7 +87,7 @@ export default function SignUpPage() {
 
   const handleOAuthSignIn = async (provider: "google" | "github") => {
     setLoading(true);
-    await signIn(provider, { callbackUrl: "/editor" });
+    await signIn(provider, { callbackUrl: "/dashboard" });
   };
 
   return (

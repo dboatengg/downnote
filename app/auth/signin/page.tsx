@@ -10,7 +10,7 @@ import { Chrome, Github, Mail, Lock, AlertCircle } from "lucide-react";
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/editor";
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
