@@ -40,20 +40,20 @@ export default async function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-primary-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
       <Header />
 
-      <main className="flex-1 px-6 py-12">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="flex-1 px-4 sm:px-6 py-8 sm:py-12">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
           {/* Greeting Section */}
           <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 dark:text-slate-50">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-slate-900 dark:text-slate-50 break-words">
               {greeting}, {firstName}!
             </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400">
+            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400">
               Ready to write something amazing today?
             </p>
           </div>
 
           {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
             <Link
               href="/editor"
               className="group p-8 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-500 dark:to-primary-600 text-white hover:shadow-xl transition-all hover:scale-[1.02]"
@@ -91,14 +91,14 @@ export default async function DashboardPage() {
           </div>
 
           {/* Documents Section */}
-          <div className="mt-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+          <div className="mt-8 sm:mt-12">
+            <div className="flex items-center justify-between gap-4 mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-slate-50">
                 Your Documents
               </h2>
               <Link
                 href="/editor"
-                className="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium"
+                className="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium whitespace-nowrap"
               >
                 Create New →
               </Link>

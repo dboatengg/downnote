@@ -213,18 +213,9 @@ Start editing to see your changes in real-time! 🚀`;
             const docs = await response.json();
             setDocuments(docs);
 
-            // Check if there's a document ID in the URL
-            const docId = searchParams.get("id");
-            if (docId && docs.length > 0) {
-              const targetDoc = docs.find((d: Document) => d.id === docId);
-              if (targetDoc) {
-                setCurrentDoc(targetDoc);
-              } else {
-                setCurrentDoc(docs[0]);
-              }
-            } else if (docs.length > 0) {
-              setCurrentDoc(docs[0]);
-            } else {
+            // Initial document selection will be handled by the separate useEffect
+            // that watches for URL parameter changes
+            if (docs.length === 0) {
               // Create welcome document for new authenticated users
               createWelcomeDocument();
             }
@@ -259,7 +250,32 @@ Start editing to see your changes in real-time! 🚀`;
     };
 
     loadDocuments();
-  }, [session, status, createWelcomeDocument, searchParams]);
+  }, [session, status, createWelcomeDocument]);
+
+  // Handle URL parameter changes to select the correct document
+  useEffect(() => {
+    if (documents.length === 0) return;
+
+    const docId = searchParams.get("id");
+    console.log("URL changed - Document ID:", docId);
+    console.log("Available documents:", documents.map((d) => ({ id: d.id, title: d.title })));
+
+    if (docId) {
+      // URL has a specific document ID - try to select it
+      const targetDoc = documents.find((d) => d.id === docId);
+      console.log("Selecting document from URL:", targetDoc);
+      if (targetDoc && targetDoc.id !== currentDoc?.id) {
+        setCurrentDoc(targetDoc);
+      } else if (!targetDoc) {
+        console.log("Document not found in URL, selecting first document");
+        setCurrentDoc(documents[0]);
+      }
+    } else if (!currentDoc) {
+      // No URL parameter and no current doc - select first document
+      console.log("No URL parameter, selecting first document");
+      setCurrentDoc(documents[0]);
+    }
+  }, [searchParams, documents, currentDoc]);
 
   // Create new document
   const createNewDocument = useCallback(async () => {
