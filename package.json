@@ -24,7 +24,7 @@
     "highlight.js": "^11.11.1",
     "katex": "^0.16.27",
     "lucide-react": "^0.559.0",
-    "next": "16.0.8",
+    "next": "^16.0.10",
     "next-auth": "^5.0.0-beta.30",
     "nextjs-toploader": "^3.9.17",
     "pg": "^8.16.3",
