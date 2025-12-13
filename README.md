@@ -219,5 +219,5 @@ This project is licensed under the MIT License.
 
 - Built with [Next.js](https://nextjs.org/)
 - Markdown rendering by [react-markdown](https://github.com/remarkjs/react-markdown)
+- Inspiration from [StackEdit](https://stackedit.io/)
 - Icons from [Lucide](https://lucide.dev/)
-- UI inspiration from modern note-taking apps
