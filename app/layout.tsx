@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/ui/providers";
 import { Toaster } from "sonner";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "DownNote - Modern Markdown Editor",
@@ -28,6 +29,7 @@ export default function RootLayout({
           speed={200}
         />
         <Providers>{children}</Providers>
+        <Analytics />
         <Toaster position="bottom-right" richColors closeButton />
       </body>
     </html>
