@@ -32,6 +32,7 @@ function EditorContent() {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [storageInfo, setStorageInfo] = useState({ percentage: 0 });
   const [isCreating, setIsCreating] = useState(false);
+  const [initialDocumentSelected, setInitialDocumentSelected] = useState(false);
 
   const isGuest = !session?.user;
 
@@ -254,7 +255,7 @@ Start editing to see your changes in real-time! 🚀`;
 
   // Handle URL parameter changes to select the correct document
   useEffect(() => {
-    if (documents.length === 0) return;
+    if (documents.length === 0 || loading) return;
 
     const docId = searchParams.get("id");
     console.log("URL changed - Document ID:", docId);
@@ -266,16 +267,22 @@ Start editing to see your changes in real-time! 🚀`;
       console.log("Selecting document from URL:", targetDoc);
       if (targetDoc && targetDoc.id !== currentDoc?.id) {
         setCurrentDoc(targetDoc);
+        setInitialDocumentSelected(true);
       } else if (!targetDoc) {
         console.log("Document not found in URL, selecting first document");
         setCurrentDoc(documents[0]);
+        setInitialDocumentSelected(true);
       }
     } else if (!currentDoc) {
       // No URL parameter and no current doc - select first document
       console.log("No URL parameter, selecting first document");
       setCurrentDoc(documents[0]);
+      setInitialDocumentSelected(true);
+    } else {
+      // Current doc is already set, mark as initialized
+      setInitialDocumentSelected(true);
     }
-  }, [searchParams, documents, currentDoc]);
+  }, [searchParams, documents, currentDoc, loading]);
 
   // Create new document
   const createNewDocument = useCallback(async () => {
@@ -522,7 +529,14 @@ Start editing to see your changes in real-time! 🚀`;
 
         {/* Editor Area */}
         <div className="flex-1 flex flex-col">
-          {currentDoc ? (
+          {loading || !initialDocumentSelected ? (
+            <div className="flex-1 flex items-center justify-center text-center p-8">
+              <div>
+                <div className="w-16 h-16 border-4 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">Loading document...</p>
+              </div>
+            </div>
+          ) : currentDoc ? (
             <>
               {/* Storage warning for guests */}
               {isGuest && storageInfo.percentage > 80 && (
