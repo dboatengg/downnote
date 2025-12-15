@@ -401,7 +401,7 @@ Start editing to see your changes in real-time! 🚀`;
             if (currentDoc?.id === id) {
               setCurrentDoc(updatedDocs[0] || null);
             }
-            toast.success("Document deleted");
+            toast.info("Document deleted");
           } else {
             toast.error("Failed to delete document");
           }
@@ -419,7 +419,7 @@ Start editing to see your changes in real-time! 🚀`;
             const info = getStorageInfo();
             setStorageInfo(info);
 
-            toast.success("Document deleted");
+            toast.info("Document deleted");
           } else {
             toast.error("Failed to delete document");
           }
