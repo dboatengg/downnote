@@ -52,24 +52,24 @@ export function Header() {
             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
           ) : session ? (
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* User Info */}
-              <div className="flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                {session.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    width={24}
-                    height={24}
-                    alt={session.user.name || "User"}
-                    className="w-6 h-6 rounded-full"
-                  />
-                ) : (
-                  <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                )}
-                {/* Hide name on mobile, show on sm and up */}
-                <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {session.user?.name || session.user?.email}
-                </span>
-              </div>
+              {/* User Info - Image only on mobile, with name on desktop */}
+              {session.user?.image ? (
+                <Image
+                  src={session.user.image}
+                  width={32}
+                  height={32}
+                  alt={session.user.name || "User"}
+                  className="w-8 h-8 rounded-full ring-2 ring-primary-500/20 dark:ring-primary-400/20"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center ring-2 ring-primary-500/20 dark:ring-primary-400/20">
+                  <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                </div>
+              )}
+              {/* Show name on desktop only */}
+              <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                {session.user?.name || session.user?.email}
+              </span>
 
               {/* Sign Out Button */}
               <button
