@@ -243,11 +243,16 @@ export function DocumentSidebar({
                       {formatDate(doc.updatedAt)}
                     </div>
                   </div>
-                  <div className={`flex items-center gap-1 transition-opacity flex-shrink-0 ${hoveredDocId === doc.id ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`flex items-center gap-1 transition-opacity flex-shrink-0 ${hoveredDocId === doc.id || currentDocId === doc.id ? 'opacity-100' : 'opacity-0 lg:opacity-0'} lg:group-hover:opacity-100`}>
                     {onDocumentUpdate && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          handleStartEdit(doc);
+                        }}
+                        onTouchEnd={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
                           handleStartEdit(doc);
                         }}
                         className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600 dark:text-primary-400 transition-colors"
@@ -259,6 +264,11 @@ export function DocumentSidebar({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleDelete(doc.id, doc.title);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         handleDelete(doc.id, doc.title);
                       }}
                       className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
