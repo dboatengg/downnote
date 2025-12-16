@@ -19,6 +19,7 @@ import Split from "react-split";
 import { useTheme } from "@/components/ui/theme-provider";
 import { Eye, Edit, Columns, Download, Save, PanelLeftClose, PanelLeft, Maximize2, Minimize2, FileText, ChevronUp, ChevronDown } from "lucide-react";
 import { calculateTextStats, formatReadingTime } from "@/lib/word-count";
+import { toast } from "sonner";
 import "highlight.js/styles/github-dark.css";
 import "katex/dist/katex.min.css";
 
@@ -87,6 +88,12 @@ export function MarkdownEditor({
         setIsSaving(true);
         onSave(content);
         setLastSaved(new Date());
+
+        // Show toast on mobile (< 640px) for better feedback
+        if (typeof window !== 'undefined' && window.innerWidth < 640) {
+          toast.success("Document saved", { duration: 1500 });
+        }
+
         setTimeout(() => setIsSaving(false), 500);
       }
     }, 2000); // Save 2 seconds after user stops typing
@@ -339,11 +346,33 @@ export function MarkdownEditor({
           </div>
 
           {/* Save Status */}
-          {lastSaved && (
-            <span className="hidden sm:inline text-xs text-slate-500 dark:text-slate-400 ml-4">
-              {isSaving ? "Saving..." : `Saved ${formatTime(lastSaved)}`}
-            </span>
-          )}
+          {/* Desktop: Show full status with text */}
+          <div className="hidden sm:flex items-center gap-2 ml-4">
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
+                  Saving...
+                </span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  Saved {formatTime(lastSaved)}
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          {/* Mobile: Show icon-only indicator */}
+          <div className="flex sm:hidden items-center ml-3">
+            {isSaving ? (
+              <div className="w-4 h-4 border-2 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full animate-spin" title="Saving..." />
+            ) : lastSaved ? (
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Saved" />
+            ) : null}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
