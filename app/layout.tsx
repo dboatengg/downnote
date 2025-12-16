@@ -12,17 +12,28 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
+    "http://localhost:3000"
   ),
   openGraph: {
     title: "DownNote - Modern Markdown Editor",
     description: "A modern markdown editor for writers and developers",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "DownNote - Modern Markdown Editor",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "DownNote - Modern Markdown Editor",
     description: "A modern markdown editor for writers and developers",
+    images: ["/opengraph-image"],
   },
 };
 

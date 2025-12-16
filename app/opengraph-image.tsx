@@ -9,6 +9,10 @@ export const size = {
 
 export const contentType = 'image/png';
 
+// Enable caching for social media scrapers
+export const runtime = 'edge';
+export const revalidate = 3600; // Cache for 1 hour
+
 // OpenGraph image component
 export default async function Image() {
   return new ImageResponse(
