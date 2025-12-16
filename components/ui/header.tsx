@@ -25,7 +25,10 @@ export function Header() {
     <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link
+          href={session ? "/dashboard" : "/"}
+          className="flex items-center gap-2 group"
+        >
           <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 dark:text-primary-400" />
           <span className="text-xl sm:text-2xl font-serif font-bold text-slate-900 dark:text-slate-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             DownNote
