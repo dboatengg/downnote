@@ -485,7 +485,7 @@ export function MarkdownEditor({
                 msOverflowStyle: 'none',
               }}
             >
-              <div className="prose prose-slate dark:prose-invert max-w-none p-8">
+              <div className="prose prose-slate dark:prose-invert max-w-none p-4 sm:p-6 md:p-8">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks, remarkEmoji, remarkAbbr, remarkMath]}
                   rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeKatex]}
@@ -528,7 +528,7 @@ export function MarkdownEditor({
           </div>
         ) : (
           <div className="h-full overflow-auto bg-white dark:bg-slate-900">
-            <div className="prose prose-slate dark:prose-invert max-w-none p-8">
+            <div className="prose prose-slate dark:prose-invert max-w-none p-4 sm:p-6 md:p-8">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks, remarkEmoji, remarkAbbr, remarkMath]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw, rehypeKatex]}
