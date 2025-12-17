@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { MarkdownEditor } from "@/components/editor/markdown-editor";
 import { DocumentSidebar } from "@/components/ui/document-sidebar";
+import { VersionHistorySidebar } from "@/components/ui/version-history-sidebar";
+import { RestoreConfirmationDialog } from "@/components/ui/restore-confirmation-dialog";
 import type { Document } from "@/components/ui/document-sidebar";
 import {
   getGuestDocuments,
@@ -33,8 +35,27 @@ function EditorContent() {
   const [storageInfo, setStorageInfo] = useState({ percentage: 0 });
   const [isCreating, setIsCreating] = useState(false);
   const [initialDocumentSelected, setInitialDocumentSelected] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [restoreDialog, setRestoreDialog] = useState<{
+    versionId: string;
+    title: string;
+    date: string;
+  } | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const isGuest = !session?.user;
+
+  // Handle document selection with URL sync
+  const handleDocumentSelect = useCallback(
+    (doc: Document) => {
+      setCurrentDoc(doc);
+      // Update URL to keep it in sync
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("id", doc.id);
+      window.history.pushState({}, "", newUrl.toString());
+    },
+    []
+  );
 
   // Show sidebar by default on desktop
   useEffect(() => {
@@ -258,24 +279,19 @@ Start editing to see your changes in real-time! 🚀`;
     if (documents.length === 0 || loading) return;
 
     const docId = searchParams.get("id");
-    console.log("URL changed - Document ID:", docId);
-    console.log("Available documents:", documents.map((d) => ({ id: d.id, title: d.title })));
 
     if (docId) {
       // URL has a specific document ID - try to select it
       const targetDoc = documents.find((d) => d.id === docId);
-      console.log("Selecting document from URL:", targetDoc);
       if (targetDoc && targetDoc.id !== currentDoc?.id) {
         setCurrentDoc(targetDoc);
         setInitialDocumentSelected(true);
       } else if (!targetDoc) {
-        console.log("Document not found in URL, selecting first document");
         setCurrentDoc(documents[0]);
         setInitialDocumentSelected(true);
       }
     } else if (!currentDoc) {
       // No URL parameter and no current doc - select first document
-      console.log("No URL parameter, selecting first document");
       setCurrentDoc(documents[0]);
       setInitialDocumentSelected(true);
     } else {
@@ -301,7 +317,8 @@ Start editing to see your changes in real-time! 🚀`;
 
         if (response.ok) {
           const newDoc = await response.json();
-          setDocuments([newDoc, ...documents]);
+          // Use functional update to avoid stale closure
+          setDocuments((prevDocs) => [newDoc, ...prevDocs]);
           setCurrentDoc(newDoc);
           toast.success("Document created");
         } else {
@@ -310,8 +327,8 @@ Start editing to see your changes in real-time! 🚀`;
       } else {
         // Create in guest storage
         const newDoc = createGuestDocument();
-        const updatedDocs = [newDoc, ...documents];
-        setDocuments(updatedDocs);
+        // Use functional update to avoid stale closure
+        setDocuments((prevDocs) => [newDoc, ...prevDocs]);
         setCurrentDoc(newDoc);
 
         // Update storage info
@@ -326,7 +343,7 @@ Start editing to see your changes in real-time! 🚀`;
     } finally {
       setIsCreating(false);
     }
-  }, [session, documents]);
+  }, [session]);
 
   // Update document
   const handleUpdateDocument = useCallback(
@@ -342,12 +359,13 @@ Start editing to see your changes in real-time! 🚀`;
 
           if (response.ok) {
             const updatedDoc = await response.json();
-            setDocuments(
-              documents.map((doc) => (doc.id === id ? updatedDoc : doc))
+            // Use functional update to avoid stale closure
+            setDocuments((prevDocs) =>
+              prevDocs.map((doc) => (doc.id === id ? updatedDoc : doc))
             );
-            if (currentDoc?.id === id) {
-              setCurrentDoc(updatedDoc);
-            }
+            setCurrentDoc((prevDoc) =>
+              prevDoc?.id === id ? updatedDoc : prevDoc
+            );
           } else {
             toast.error("Failed to update document");
           }
@@ -355,13 +373,13 @@ Start editing to see your changes in real-time! 🚀`;
           // Update in guest storage
           const updatedDoc = updateGuestDocument(id, updates);
           if (updatedDoc) {
-            const updatedDocs = documents.map((doc) =>
-              doc.id === id ? updatedDoc : doc
+            // Use functional update to avoid stale closure
+            setDocuments((prevDocs) =>
+              prevDocs.map((doc) => (doc.id === id ? updatedDoc : doc))
             );
-            setDocuments(updatedDocs);
-            if (currentDoc?.id === id) {
-              setCurrentDoc(updatedDoc);
-            }
+            setCurrentDoc((prevDoc) =>
+              prevDoc?.id === id ? updatedDoc : prevDoc
+            );
           }
         }
       } catch (error) {
@@ -369,7 +387,7 @@ Start editing to see your changes in real-time! 🚀`;
         toast.error("Failed to update document");
       }
     },
-    [session, documents, currentDoc]
+    [session]
   );
 
   // Save document content
@@ -396,11 +414,16 @@ Start editing to see your changes in real-time! 🚀`;
           });
 
           if (response.ok) {
-            const updatedDocs = documents.filter((doc) => doc.id !== id);
-            setDocuments(updatedDocs);
-            if (currentDoc?.id === id) {
-              setCurrentDoc(updatedDocs[0] || null);
-            }
+            let nextDoc: typeof currentDoc = null;
+            // Use functional update to avoid stale closure
+            setDocuments((prevDocs) => {
+              const updatedDocs = prevDocs.filter((doc) => doc.id !== id);
+              nextDoc = updatedDocs[0] || null;
+              return updatedDocs;
+            });
+            setCurrentDoc((prevDoc) =>
+              prevDoc?.id === id ? nextDoc : prevDoc
+            );
             toast.info("Document deleted");
           } else {
             toast.error("Failed to delete document");
@@ -409,11 +432,16 @@ Start editing to see your changes in real-time! 🚀`;
           // Delete from guest storage
           const success = deleteGuestDocument(id);
           if (success) {
-            const updatedDocs = documents.filter((doc) => doc.id !== id);
-            setDocuments(updatedDocs);
-            if (currentDoc?.id === id) {
-              setCurrentDoc(updatedDocs[0] || null);
-            }
+            let nextDoc: typeof currentDoc = null;
+            // Use functional update to avoid stale closure
+            setDocuments((prevDocs) => {
+              const updatedDocs = prevDocs.filter((doc) => doc.id !== id);
+              nextDoc = updatedDocs[0] || null;
+              return updatedDocs;
+            });
+            setCurrentDoc((prevDoc) =>
+              prevDoc?.id === id ? nextDoc : prevDoc
+            );
 
             // Update storage info
             const info = getStorageInfo();
@@ -429,7 +457,7 @@ Start editing to see your changes in real-time! 🚀`;
         toast.error("Failed to delete document");
       }
     },
-    [session, documents, currentDoc]
+    [session]
   );
 
   // Export documents
@@ -483,6 +511,69 @@ Start editing to see your changes in real-time! 🚀`;
     input.click();
   }, []);
 
+  // Handle restore request (shows confirmation dialog)
+  const handleRestoreRequest = useCallback(
+    async (versionId: string) => {
+      if (!currentDoc) return;
+
+      try {
+        // Fetch version details for confirmation dialog
+        const response = await fetch(
+          `/api/documents/${currentDoc.id}/versions`
+        );
+        if (response.ok) {
+          const versions = await response.json();
+          const version = versions.find((v: any) => v.id === versionId);
+
+          if (version) {
+            setRestoreDialog({
+              versionId: version.id,
+              title: version.title,
+              date: new Date(version.createdAt).toLocaleString(),
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch version details:", error);
+        toast.error("Failed to load version details");
+      }
+    },
+    [currentDoc]
+  );
+
+  // Handle restore confirmation
+  const handleRestoreConfirm = useCallback(async () => {
+    if (!currentDoc || !restoreDialog) return;
+
+    setIsRestoring(true);
+    try {
+      const response = await fetch(
+        `/api/documents/${currentDoc.id}/versions/${restoreDialog.versionId}/restore`,
+        { method: "POST" }
+      );
+
+      if (response.ok) {
+        const restoredDoc = await response.json();
+        // Update current document
+        setCurrentDoc(restoredDoc);
+        // Update documents list using functional update to avoid stale closure
+        setDocuments((prevDocs) =>
+          prevDocs.map((doc) => (doc.id === restoredDoc.id ? restoredDoc : doc))
+        );
+        toast.success("Version restored successfully");
+        setRestoreDialog(null);
+        setShowVersionHistory(false);
+      } else {
+        toast.error("Failed to restore version");
+      }
+    } catch (error) {
+      console.error("Restore error:", error);
+      toast.error("Failed to restore version");
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [currentDoc, restoreDialog]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -507,7 +598,7 @@ Start editing to see your changes in real-time! 🚀`;
             <DocumentSidebar
               documents={documents}
               currentDocId={currentDoc?.id || null}
-              onDocumentSelect={setCurrentDoc}
+              onDocumentSelect={handleDocumentSelect}
               onDocumentCreate={createNewDocument}
               onDocumentDelete={handleDeleteDocument}
               onDocumentUpdate={(id, updates) => handleUpdateDocument(id, updates)}
@@ -569,7 +660,31 @@ Start editing to see your changes in real-time! 🚀`;
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
                 showSidebar={showSidebar}
                 onFocusModeChange={setIsFocusMode}
+                onHistoryClick={
+                  !isGuest ? () => setShowVersionHistory(true) : undefined
+                }
               />
+
+              {/* Version History Sidebar - Only for authenticated users */}
+              {!isGuest && (
+                <>
+                  <VersionHistorySidebar
+                    documentId={currentDoc.id}
+                    isOpen={showVersionHistory}
+                    onClose={() => setShowVersionHistory(false)}
+                    onRestore={handleRestoreRequest}
+                  />
+
+                  <RestoreConfirmationDialog
+                    isOpen={!!restoreDialog}
+                    versionTitle={restoreDialog?.title || ""}
+                    versionDate={restoreDialog?.date || ""}
+                    onConfirm={handleRestoreConfirm}
+                    onCancel={() => setRestoreDialog(null)}
+                    loading={isRestoring}
+                  />
+                </>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-center p-8">

@@ -75,9 +75,26 @@ model Document {
   updatedAt DateTime @updatedAt
   userId    String? // Nullable for guest documents
 
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions DocumentVersion[]
 
   @@index([userId])
   @@index([updatedAt])
   @@map("documents")
+}
+
+// DocumentVersion Model - Version history for documents
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  content    String   @db.Text
+  title      String
+  createdAt  DateTime @default(now())
+  charCount  Int
+  wordCount  Int
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, createdAt(sort: Desc)])
+  @@map("document_versions")
 }

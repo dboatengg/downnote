@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { extractTitleFromMarkdown } from "@/lib/extract-title";
+import {
+  shouldCreateVersion,
+  calculateContentStats,
+} from "@/lib/version-logic";
+import { cleanupOldVersions } from "@/lib/version-cleanup";
 
 // GET - Get single document
 export async function GET(
@@ -78,6 +83,39 @@ export async function PATCH(
       );
     }
 
+    // Fetch latest version for comparison (if content is being updated)
+    // Wrap in try-catch in case migration hasn't run yet
+    let latestVersion = null;
+    let versionDecision: {
+      shouldCreateVersion: boolean;
+      reason: "significant_change" | "time_threshold" | "no_version_needed" | "first_version";
+    } = {
+      shouldCreateVersion: false,
+      reason: "no_version_needed",
+    };
+
+    if (content !== undefined) {
+      try {
+        latestVersion = await prisma.documentVersion.findFirst({
+          where: { documentId: id },
+          orderBy: { createdAt: "desc" },
+          select: { content: true, createdAt: true },
+        });
+
+        versionDecision = shouldCreateVersion(
+          content,
+          latestVersion?.content || null,
+          latestVersion?.createdAt || null
+        );
+      } catch (versionQueryError) {
+        // Table might not exist yet if migration hasn't run
+        console.log(
+          "Version history not available (migration may not have run yet)"
+        );
+      }
+    }
+
+    // Update document
     const document = await prisma.document.update({
       where: { id },
       data: {
@@ -85,6 +123,28 @@ export async function PATCH(
         ...(content !== undefined && { content }),
       },
     });
+
+    // Create version if needed
+    if (versionDecision.shouldCreateVersion && content !== undefined) {
+      try {
+        const stats = calculateContentStats(content);
+        await prisma.documentVersion.create({
+          data: {
+            documentId: id,
+            content,
+            title: title || document.title,
+            charCount: stats.charCount,
+            wordCount: stats.wordCount,
+          },
+        });
+
+        // Cleanup old versions (keep last 20)
+        await cleanupOldVersions(id, 20);
+      } catch (versionError) {
+        // Log error but don't fail the request - version creation is non-critical
+        console.error("Failed to create version:", versionError);
+      }
+    }
 
     return NextResponse.json(document);
   } catch (error) {
