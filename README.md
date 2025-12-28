@@ -119,7 +119,7 @@ A beautiful, modern markdown editor built with Next.js 16, featuring real-time p
 
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 downnote/
@@ -207,11 +207,11 @@ model Document {
 }
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
